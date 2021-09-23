@@ -7,11 +7,11 @@ from discord.ext import commands
 load_dotenv()
 
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
-bot = commands.Bot(command_prefix='!')
+client = commands.Bot(command_prefix='!')
 
 # when the bot is initialized it will print a has connected to the terminal
-@bot.event
+@client.event
 async def on_ready():
-    print(f"{bot.user.name} has connected to Discord!")
+    print(f"{client.user.name} has connected to Discord!")
 
-bot.run(os.getenv("discord_token"))
+client.run(os.getenv("discord_token"))
