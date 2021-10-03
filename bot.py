@@ -170,7 +170,7 @@ async def queue(ctx):
     ListEmbed = discord.Embed(title="In queue", description=backlog, color=0x0000ff)
     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
     await ctx.message.channel.send(embed=ListEmbed)
-@client.command(aliases=['Clear', 'clear', 'empty'])
+@client.command(aliases=['Clear', 'clear', 'Empty'])
 async def empty(ctx):
     global backlog
     backlog = []
