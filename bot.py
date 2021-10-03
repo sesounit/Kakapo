@@ -35,8 +35,8 @@ async def on_ready():
 @client.command(name='version')
 async def version(context):
 
-    mainEmbed = discord.Embed(title="Kakapo Version Notes", description="Wuh Wuh wee wAh", color=0x00ff00)
-    mainEmbed.add_field(name="Version Code:", value="v0.6.9", inline=False)
+    mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
+    mainEmbed.add_field(name="Version Code:", value="v0.0.1", inline=False)
     mainEmbed.add_field(name="Date Released:", value="September 27, 2021", inline=False)
     mainEmbed.set_footer(text="Kakapo written by Dildo Sagbag#8107, Pickle423#0408.")
 
