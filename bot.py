@@ -20,12 +20,25 @@ guild2 = 'Null'
 async def on_ready():
     print(f"{client.user.name} has connected to Discord!")
     await nextinqueue.start()
+#Cogs Loader
+@client.command()
+@commands.has_permissions(administrator=True)
+async def load(ctx, extension):
+    client.load_extension(f'cogs.{extension}')
+@client.command()
+@commands.has_permissions(administrator=True)
+async def unload(ctx, extension):
+    client.unload_extension(f'cogs.{extension}')
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        client.load_extension(f'cogs.{filename[:-3]}')
 # Not at all necessary, but I like a version notes command, and the one I've used in the past looks nice.
 @client.command(name='version')
 async def version(context):
 
     mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-    mainEmbed.add_field(name="Version Code:", value="v0.0.1", inline=False)
+    mainEmbed.add_field(name="Changes:", value="Cogs system added, music functionality improved.")
+    mainEmbed.add_field(name="Version Code:", value="v0.1.0", inline=False)
     mainEmbed.add_field(name="Date Released:", value="September 27, 2021", inline=False)
     mainEmbed.set_footer(text="Kakapo written by Dildo Sagbag#8107, Pickle423#0408.")
 
