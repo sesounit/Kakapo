@@ -49,6 +49,15 @@ async def version(context):
     mainEmbed.set_footer(text="Kakapo written by Dildo Sagbag#8107, Pickle423#0408.")
 
     await context.message.channel.send(embed=mainEmbed)
+    
+#Kill Bot
+@client.command()
+async def kill(ctx):
+    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+        await ctx.send('Bot Terminated')
+        sys.exit()
+    else:
+        await ctx.send('You do not have the authority to kill the bot.')
 
 #This has some debugging phrases that print to the console. Not really necessary anymore, but would be helpful if something were to go wrong.
 @tasks.loop(seconds=5)
