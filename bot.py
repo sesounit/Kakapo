@@ -4,17 +4,7 @@ from dotenv import load_dotenv
 import nacl
 import youtube_dl
 from discord.ext import commands, tasks
-'''
-Heyo Sag, this is pickler here.-
-    Sorry if the comments aren't serious, but you might've seen that one coming when you asked me to help you out.
-    The code doesn't exactly follow clean code principals as described in Robert Cecil Martin's landmark book that no one read-
-    But oh well, it works, right? Also, I can understand it the way it is so- Don't **need** to fix it really.
 
-    Reminders for dependencies:
-        youtube_dl, ffmpeg
-        I'm like 90% sure that's it. They can both probably be installed by command line, however iirc one is outdated if you do it like so.
-        So if it breaks, just tell me.
-'''
 # is a .env file inside the folder to leave the token for the bot outside the git
 load_dotenv()
 
