@@ -47,8 +47,8 @@ async def nextinqueue():
     global guild2
     global backlog
     global voicestopped
-    voice = discord.utils.get(client.voice_clients, guild = guild2)
     if voicestopped == False:
+        voice = discord.utils.get(client.voice_clients, guild = guild2)
         print(voice)
         if voice == None:
             print('None')
@@ -66,10 +66,11 @@ async def nextinqueue():
                 print(backlog)
             except:
                 pass
+        if voice != None:
+            if voice.is_playing == True:
+                await timeout.start()
     else:
         print('Stopped')
-    if voice.is_playing == False:
-        await timeout.start()
 @tasks.loop(minutes=25)
 async def timeout():
     voice = discord.utils.get(client.voice_clients, guild = guild2)
@@ -127,6 +128,7 @@ async def play(ctx, video_link : str):
             await ctx.send("Bad Link")
 @client.command()
 async def skip(ctx):
+    global voicestopped
     voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
     if voice.is_playing():
         voice.stop()
@@ -137,6 +139,7 @@ async def skip(ctx):
         URL = info['formats'][0]['url']
     voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
     backlog.remove(videolink)
+    voicestopped = False
     print(backlog)
 @client.command()
 async def leave(ctx):
