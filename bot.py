@@ -1,5 +1,5 @@
 # bot.py
-import discord, os
+import discord, os, sys
 from dotenv import load_dotenv
 import nacl
 import youtube_dl
