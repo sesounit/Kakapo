@@ -46,7 +46,7 @@ async def version(context):
     mainEmbed.add_field(name="Changes:", value="Cogs system added, music functionality improved.")
     mainEmbed.add_field(name="Version Code:", value="v0.1.0", inline=False)
     mainEmbed.add_field(name="Date Released:", value="October 4, 2021", inline=False)
-    mainEmbed.set_footer(text="Kakapo written by Dildo Sagbag#8107, Pickle423#0408.")
+    mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
 
     await context.message.channel.send(embed=mainEmbed)
     
