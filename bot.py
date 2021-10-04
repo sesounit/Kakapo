@@ -39,7 +39,7 @@ async def version(context):
     mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
     mainEmbed.add_field(name="Changes:", value="Cogs system added, music functionality improved.")
     mainEmbed.add_field(name="Version Code:", value="v0.1.0", inline=False)
-    mainEmbed.add_field(name="Date Released:", value="September 27, 2021", inline=False)
+    mainEmbed.add_field(name="Date Released:", value="October 4, 2021", inline=False)
     mainEmbed.set_footer(text="Kakapo written by Dildo Sagbag#8107, Pickle423#0408.")
 
     await context.message.channel.send(embed=mainEmbed)
@@ -69,7 +69,7 @@ async def nextinqueue():
             except:
                 pass
         if voice != None:
-            if voice.is_playing == True:
+            if voice.is_playing == False:
                 await timeout.start()
     else:
         print('Stopped')
@@ -83,7 +83,7 @@ async def timeout():
 #Looks weird, probably could be cleaner, but works this way.
 #The youtube-dl shit that actually plays the music could be made into a function to avoid copy pasting several times, but this is for free so. ¯\_(ツ)_/¯
 #Also don't touch this part without telling me, it'll probably break if you so much as breathe on it.
-@client.command()
+@client.command(aliases=['P', 'p', 'Play'])
 async def play(ctx, video_link : str):
     voice = discord.utils.get(client.voice_clients, guild = ctx.guild)
     global backlog
