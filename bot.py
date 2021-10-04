@@ -3,7 +3,6 @@ import discord, os
 from dotenv import load_dotenv
 import nacl
 import youtube_dl
-import os
 from discord.ext import commands, tasks
 '''
 Heyo Sag, this is pickler here.-
