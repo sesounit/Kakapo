@@ -5,11 +5,13 @@ import nacl
 import youtube_dl
 from discord.ext import commands, tasks
 
+intents = discord.Intents.default()
+intents.members = True
 # is a .env file inside the folder to leave the token for the bot outside the git
 load_dotenv()
 
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
-client = commands.Bot(command_prefix='!')
+client = commands.Bot(command_prefix='!', intents=intents)
 
 #Music Related
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -58,6 +60,11 @@ async def kill(ctx):
         sys.exit()
     else:
         await ctx.send('You do not have the authority to kill the bot.')
+
+#Simple Ping Check
+@client.command()
+async def ping(ctx):
+    await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
 #This has some debugging phrases that print to the console. Not really necessary anymore, but would be helpful if something were to go wrong.
 @tasks.loop(seconds=5)
