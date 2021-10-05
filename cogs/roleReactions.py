@@ -34,8 +34,8 @@ class ReactionRoles(commands.Cog):
 			guild_id = payload.guild_id
 			guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
 
-			if payload.emoji.name == 'yoda':
-				role = discord.utils.get(guild.roles, name = 'nigger')
+			if payload.emoji.name == 'INSERT EMOJI NAME':
+				role = discord.utils.get(guild.roles, name = 'INSERT ROLE NAME')
 
 			member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
 			await member.remove_roles(role)
