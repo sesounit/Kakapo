@@ -4,14 +4,13 @@ from dotenv import load_dotenv
 import nacl
 import youtube_dl
 from discord.ext import commands, tasks
-
 intents = discord.Intents.default()
 intents.members = True
 # is a .env file inside the folder to leave the token for the bot outside the git
 load_dotenv()
 
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
-client = commands.Bot(command_prefix='!', intents=intents)
+client = commands.Bot(command_prefix='!', intents=intents, help_command = None)
 
 #Music Related
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -22,8 +21,10 @@ guild2 = 'Null'
 # when the bot is initialized it will print has connected to the terminal
 @client.event
 async def on_ready():
+    global welcomemessagechannel
     print(f"{client.user.name} has connected to Discord!")
     await nextinqueue.start()
+
 
 #Cogs Loader
 @client.command()
@@ -45,13 +46,13 @@ for filename in os.listdir('./cogs'):
 async def version(context):
 
     mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-    mainEmbed.add_field(name="Changes:", value="Cogs system added, music functionality improved.")
-    mainEmbed.add_field(name="Version Code:", value="v0.1.0", inline=False)
+    mainEmbed.add_field(name="Changes:", value="Welcome message system added, role-reaction system ready.")
+    mainEmbed.add_field(name="Version Code:", value="v0.6.2", inline=False)
     mainEmbed.add_field(name="Date Released:", value="October 4, 2021", inline=False)
     mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Fletch#0617, Dildo Sagbag#8107.")
 
     await context.message.channel.send(embed=mainEmbed)
-    
+
 #Kill Bot
 @client.command()
 async def kill(ctx):
