@@ -47,7 +47,7 @@ async def version(context):
     mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
     mainEmbed.add_field(name="Changes:", value="Welcome message system added, role-reaction system ready.")
     mainEmbed.add_field(name="Version Code:", value="v0.6.2", inline=False)
-    mainEmbed.add_field(name="Date Released:", value="October 4, 2021", inline=False)
+    mainEmbed.add_field(name="Date Released:", value="October 5, 2021", inline=False)
     mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Fletch#0617, Dildo Sagbag#8107.")
 
     await context.message.channel.send(embed=mainEmbed)
