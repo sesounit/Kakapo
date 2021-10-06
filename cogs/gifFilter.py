@@ -9,11 +9,11 @@ class gifFilter(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         channel = discord.utils.get(message.guild.text_channels, name="voice-chat")
-        if message.channel != channel:
+        channel2 = discord.utils.get(message.guild.text_channels, name="nsfw-memes-no-porn")
+        channel3 = discord.utils.get(message.guild.text_channels, name="bot-commands")
+        if message.channel != channel and message.channel != channel2 and message.channel != channel3:
             not_allow = message.content
-            not_allow_true = re.search("^https://tenor.com/",not_allow)
-            not_allow_alternatetrue = re.search("^https.*gif$",not_allow)
-            if (not_allow_true or not_allow_alternatetrue):
+            if "https://tenor.com" in not_allow or ".gif" in not_allow:
                 await message.delete()
 
 def setup(client):
