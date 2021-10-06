@@ -21,7 +21,6 @@ guild2 = 'Null'
 # when the bot is initialized it will print has connected to the terminal
 @client.event
 async def on_ready():
-    global welcomemessagechannel
     print(f"{client.user.name} has connected to Discord!")
     await nextinqueue.start()
 
