@@ -5,17 +5,17 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 load_dotenv()
+msg_id = 0
 
-
-class ReactionRoles(commands.Cog):
+class reactForRoles(commands.Cog):
 
 	def __init__ (self, client):
 		self.client = client
 
-	msg_id = 0
+	
 
 	@commands.command()
-	async def roleReactMessage(context):
+	async def roleReactMessage(self, context):
 		global msg_id
 		await context.channel.purge(limit=1)
 		embedMessage = discord.Embed(title="React For Roles!", description="React to get your Discord Role!", color=0x0E8643)
@@ -30,8 +30,8 @@ class ReactionRoles(commands.Cog):
 		#print(msg_id)
 
 
-	@commands.Cog.listener
-	async def on_raw_reaction_add(payload):
+	@commands.Cog.listener()
+	async def on_raw_reaction_add(self, payload):
 		global msg_id
 		role = None
 		message_id = payload.message_id
@@ -39,7 +39,7 @@ class ReactionRoles(commands.Cog):
 		#print(msg_id)
 		if message_id == msg_id:
 			guild_id = payload.guild_id
-			guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
+			guild = discord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
 			#print(payload.emoji.name)
 			if payload.emoji.name == '1️⃣':
 			
@@ -54,15 +54,15 @@ class ReactionRoles(commands.Cog):
 				await member.add_roles(role)
 
 
-	@commands.Cog.listener
-	async def on_raw_reaction_remove(payload):
+	@commands.Cog.listener()
+	async def on_raw_reaction_remove(self, payload):
 		global msg_id
 		
 		message_id = payload.message_id
 		#print(msg_id)
 		if message_id == msg_id:
 			guild_id = payload.guild_id
-			guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
+			guild = discord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
 
 			if payload.emoji.name == '1️⃣':
 				role = discord.utils.get(guild.roles, name = 'Operator')
@@ -78,4 +78,4 @@ class ReactionRoles(commands.Cog):
 
 
 def setup(client):
-	client.add_cog(ReactionRoles(client))
+	client.add_cog(reactForRoles(client))
