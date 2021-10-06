@@ -27,14 +27,14 @@ async def on_ready():
 
 #Cogs Loader
 @client.command()
-@commands.has_permissions(administrator=True)
 async def load(ctx, extension):
-    client.load_extension(f'cogs.{extension}')
+    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+        client.load_extension(f'cogs.{extension}')
 
 @client.command()
-@commands.has_permissions(administrator=True)
 async def unload(ctx, extension):
-    client.unload_extension(f'cogs.{extension}')
+    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+        client.unload_extension(f'cogs.{extension}')
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
