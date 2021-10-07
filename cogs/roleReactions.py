@@ -21,7 +21,7 @@ class reactForRoles(commands.Cog):
 		global msg
 		await context.channel.purge(limit=1)
 		embedMessage = discord.Embed(title="React For Roles!", description="React to get your Discord Role!", color=0x0E8643)
-		embedMessage.add_field(name="Operative", value="React with :one: for the Operative Role.")
+		embedMessage.add_field(name="Operative", value="React with :one: for the Operator Role.")
 		embedMessage.add_field(name="Combat Service Support", value="React with :two: for the Combat Service Support Role.", inline=False)
 		embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
 
@@ -69,11 +69,6 @@ class reactForRoles(commands.Cog):
 				await msg.add_reaction('1️⃣')
 				await msg.add_reaction('2️⃣')
 
-			
-
-
-
-
 
 	@commands.Cog.listener()
 	async def on_raw_reaction_remove(self, payload):
@@ -94,8 +89,6 @@ class reactForRoles(commands.Cog):
 				role = discord.utils.get(guild.roles, name = 'Combat Service Support')
 				member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
 				await member.remove_roles(role)
-
-			
 
 
 def setup(client):
