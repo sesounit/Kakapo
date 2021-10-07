@@ -1,4 +1,4 @@
-import praw, time, os
+import praw, os
 from dotenv import load_dotenv
 
 load_dotenv()
