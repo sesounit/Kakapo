@@ -1,54 +1,90 @@
-import praw, time
+import praw, time, os
 from dotenv import load_dotenv
 
 load_dotenv()
-token = os.getenv("reddit_tokens()")
-reddit = praw.Reddit(user_agent= token.user_agent,
-		  client_id= token.client_id,
-		  client_secret= token.client_secret,
-		  redirect_uri= token.redirect_uri,
-		  username= token.username,
-		  password= token.password)
+
+reddit = praw.Reddit(user_agent= os.getenv("user_agent"),
+		  client_id= os.getenv("client_id"),
+		  client_secret= os.getenv("client_secret"),
+		  redirect_uri= os.getenv("redirect_uri"),
+		  username= os.getenv("username"),
+		  password= os.getenv("password"))
 
 print(reddit.user.me())
 
 
 
-s = """[A round green and gray round shield with an 11-starred field and Kākāpō charge](https://imgur.com/GQGcVS8)
+s = """#Media
+All media is linked and provided on the [S.E.S.O. Youtube Channel](https://www.youtube.com/channel/UC5iMX4ubNxfiFaG2fbAOKOg/featured)
 
-[SESO Operatives entrenched in a forest](https://imgur.com/a/MgVYSF6)
+The following is a selection of recommended S.E.S.O. videos:
+
+[Operation Green Diamond | 5th Engagement](https://youtu.be/yiBY-arKDqI), full engagement footage from an operation set in the Chernobyl Exclusion Zone.
+
+[Operation Burning Buddhist Trailer](https://www.youtube.com/watch?v=d8tj5IT-fi4), a trailer for our 5th operation set in the Vietnam War
+
+[Operation Burning Buddhist | 2nd Engagement](https://www.youtube.com/watch?v=RlG4znKKK_E), full engagement footage of an engagement.
+
+[Operation Trebuchet | Side Campaign](https://www.youtube.com/watch?v=fLH6BiG3RD8), a collage from our Operation Trebuchet campaign set in the Halo universe.
+
+[Operation Perun | Final Engagement](https://youtu.be/wnNviA-t7UU), a unit-favorite. A 3 month operation that ended with an explosive engagement.
+
+[SESO Arma funny moments | Compilation of Silliness](https://youtu.be/sqokKzQn9vc). A perfect example of our casual attitude.
+
+***
+# Schedule
+We operate in the EST timezone. However, we are open to all timezones, especially European and Pacific.
+
+Operation | Saturday | Sunday
+:--|:--|:--
+S.E.S.O. Operation | 1800 EST | 1800 EST
+
+***
+# What we offer
+## Casual MilSim Atmosphere
+
+We focus on having fun first, being tactical later. This means many of our addons and structure are configured for maximum enjoyment with the the least drag.
+
+## Low expectations
+
+No experience, no test, no minimum age, no microphone needed, no single-clanning requirement. Just have Arma 3 and a desire for cooperation.
+
+## Rankless structure
+
+We do not hold any ranks in the unit, in-game or outside. Yet, we still hold a structure. Anyone is permissible to choose any role they wish, whether it be squad leader, sniper, pilot, etc. as long as most of the group agrees with the role selection. Usually, the group is fine with anyone's selection and the structure works harmoniously.
+
+## S.E.S.O. Storyline Operations
+
+Operations set in the S.E.S.O. canon are part of a storyline that spans several campaigns. This means our operations can be set in any time period and setting. We have operated during the invasion of Czechoslovakia (Sudeten Crisis, 1938), the Vietnam War (Operation Burning Buddhist, 1965), the Chernobyl Exclusion Zone (Operation Green Diamond, 1988), and the Donbass War (Operation Black Bear, 2014). We also operate in fictional settings that are based off historical events such as a Yugoslavian civil war set on Fapovo Islands (Operation Openhouse, 1992), and a Southern African civil war on Isla Duala (Isla Duala Civil War, 2000).
+
+## 24/7 Scenarios Server
+
+Our dedicated server machine runs community-made scenarios on rotation, always available to play any time. This is perfect for individuals who cannot make it to the operations but wish to spend time with S.E.S.O. It is also good for any people who just want more Arma 3 in their lives. The current scenarios we play are Antistasi (with RHS mods), Manhunt, and Dynamic Recon Ops. Feel free to suggest more workshop missions.
+
+## Side Engagements
+
+S.E.S.O. makes it easy for one to become a host of engagements/operations. Upon request and feedback from experienced Operation Hosts, one can quickly feature their custom-made missions to the unit. There is no strict test or experience necessary. With enough engagements under one's sleeve, one can even contribute to the S.E.S.O. storyline.
+
+## Active Lounge
+
+Every night, we gather in voice channels to play games. We are welcome for anyone to join in our multiplayer game sessions, developing mods, or just to chat.
+
+***
+# Background
+In 2018, we grew dissatisfied with the strict bureacracy associated with Arma MilSim units. It was difficult to get into an engaging operation fast and easily. Thus, S.E.S.O. was created. We are a tightly knit community bent on providing engaging experiences where friends can cooperate without the overhead of ranks and tests. Since then, we have garnered 15+ active players per operation and we hope to garner more. We will keep posting for recruitment until our soft-cap of 32 active players. We welcome you to join us for one operation or many.
+
 ***
 
+# How to Join S.E.S.O.
 
-###Why choose S.E.S.O.?
-* Casual milsim. This means no worries about military rank structure but still adhering to Veteran difficulty and common sense tactics.
+1. Join the discord at  https://discord.gg/AVE9Gvq97C
+2. Download the mods you want in #mod-list
+3. Join the Teamspeak Server using #teamspeak-info
+4. Join the game server using the same connection details from #teamspeak-info
 
-* We have operations every Saturday evening.
-
-* Low expectations. We require no experience, no test, no age limit, no commitment, and no sign-up. We will teach you everything you have to know in an hour.
-
-* A dedicated server that constantly plays scenarios like Antistasi, TRGM2, Liberation, etc.
-
-* Fleshed out campaigns in which players influence the outcomes of entire wars by completing their objectives in various ways
-
-* An active lounge where we play various games every night (Paradox Grand Strategies, Garry's Mod, Rainbow Six Siege, Left 4 Dead 2, etc.).
-
-###Current S.E.S.O. Campaign Details
-S.E.S.O. is set an alternative history version of the 2014 Crimean conflict. The UN General Assembly Resolution 68/262 superceded the UN Security Council and sent peacekeeping forces to the afflicted region of Bystrica. Thinking it would be a simple operation, three PMCs were contracted for this conflict, one of which is S.E.S.O. The three PMCs work together to attempt to neutralize the Novorossiyan threat until it quickly runs out of control due to poor Ukrainian morale, human rights abuses, and xenophobia. It comes to S.E.S.O. operatives to to shape the outcome of this conflict any way they wish.
-
-###Still not convinced?
-Then hop on the [Discord](https://discord.gg/mVSYcdf) and see for yourself.
-***
-
-#**What is S.E.S.O.?**
-S.E.S.O. is a private military group specialized in combined armed assaults, military sabotage, and HVT security. We receive contracts from all sorts of independent entities, supranational organizations, and armed forces.
-
-We emerged as a group of friends with the aim of producing plain fun Zeus missions. That aim has still been true to the this day. We have weekly operations that could range from 3-5 hours. There is no commitment, no sign-up, and no requirements either. Simply download the mods, join the discord, join the teamspeak, and then join the server!
-
-###We can best be contacted through our Discord below!
-Discord: https://discord.gg/mVSYcdf"""
+***"""
 
 subreddit = reddit.subreddit('FindAUnit')
 subreddit.submit(
-	'S.E.S.O. [US][Recruiting][Casual][A3]', 
+	'S.E.S.O. PMC[US][Recruiting][Casual][A3]', 
 	selftext=s,)
