@@ -9,6 +9,13 @@ intents.members = True
 # is a .env file inside the folder to leave the token for the bot outside the git
 load_dotenv()
 
+# Debug Helpers
+def developer_only(ctx):
+    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+        return True
+    else:
+        False
+
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
 client = commands.Bot(command_prefix='!', intents=intents, help_command = None)
 
@@ -27,13 +34,19 @@ async def on_ready():
 #Cogs Loader
 @client.command()
 async def load(ctx, extension):
-    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+    if developer_only(ctx):
         client.load_extension(f'cogs.{extension}')
+        print(f"Successfully loaded cogs.{extension}")
+    else:
+        print("Caller is not a developer")
 
 @client.command()
 async def unload(ctx, extension):
-    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+    if developer_only(ctx):
         client.unload_extension(f'cogs.{extension}')
+        print(f"Successfully unloaded cogs.{extension}")
+    else:
+        print("Caller is not a developer")
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
@@ -54,7 +67,7 @@ async def version(context):
 #Kill Bot
 @client.command()
 async def kill(ctx):
-    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+    if developer_only(ctx):
         await ctx.send('Bot Terminated')
         sys.exit()
     else:
