@@ -1,5 +1,5 @@
 # bot.py
-import discord, os, sys
+import discord, os, sys, random
 from dotenv import load_dotenv
 import nacl
 import youtube_dl
@@ -30,7 +30,6 @@ guild2 = 'Null'
 async def on_ready():
     print(f"{client.user.name} has connected to Discord!")
     await nextinqueue.start()
-
 
 #Cogs Loader
 @client.command()
