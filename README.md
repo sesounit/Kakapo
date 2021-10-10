@@ -55,16 +55,16 @@ Clear the queue of videos.
 `!clean <integer>` **Admin**<br />
 Removes a certain amount of messages.
 
-`!ban` **Admin**<br />
+`!ban @user` **Admin**<br />
 Bans a user from the guild.
 
-`!unban` **Admin**<br />
+`!unban @user` **Admin**<br />
 Unbans a user.
 
-`!mute` **Admin**<br />
+`!mute @user` **Admin**<br />
 Mutes a user. This is persistent even if the user leaves and returns to the guild.
 
-`!unmute` **Admin**<br />
+`!unmute @user` **Admin**<br />
 Unmutes a user.
 
 `!roleReactMessage`<br />
