@@ -12,9 +12,19 @@ intents.members = True
 class Moderation(commands.Cog):
     def _init_(self, client):
         self.client = client
+    
+    def developer_only(ctx):
+        if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+            return True
+        else:
+            False
+    
     async def cog_check(self, ctx):
         #Check if user has admin role
-        return ctx.author.guild_permissions.manage_messages
+        if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+            return True
+        else:
+            return ctx.author.guild_permissions.manage_messages
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -51,7 +61,7 @@ class Moderation(commands.Cog):
                 await ctx.send(f'Unbanned {user.name}#{user.discriminator}')
                 return
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    #@commands.has_permissions(administrator=True)
     async def mute(self, ctx, *, member : discord.Member):
         global muted
         print(muted)
@@ -59,6 +69,7 @@ class Moderation(commands.Cog):
         role = discord.utils.get(ctx.guild.roles, name='Muted')
         user = member
         await user.add_roles(role)
+        await user.edit(mute=True)
         user = str(user)
         print(user)
         muted.append(user)
@@ -67,13 +78,14 @@ class Moderation(commands.Cog):
                 f.write(element)
 
     @commands.command()
-    @commands.has_permissions(administrator=True)
+    #@commands.has_permissions(administrator=True)
     async def unmute(self, ctx, *, member : discord.Member):
         global muted
         guild = ctx.guild
         role = discord.utils.get(ctx.guild.roles, name='Muted')
         user = member
         await user.remove_roles(role)
+        await user.edit(mute=False)
         user = str(user)
         print(user)
         print(f'before removal: {muted}')
