@@ -44,7 +44,7 @@ Pauses the current playing video.
 Resumes the current playing video.
 
 `!stop`<br />
-Equivalent to muting the bot yet the video will still play.
+Indefinitely stops the current video from playing. Unlike `!pause`, you cannot continue playing the current song. You can still use `!skip` and `!play` to continue with the rest of the queue.
 
 `!queue`<br />
 Display a queue of all videos to be played.
