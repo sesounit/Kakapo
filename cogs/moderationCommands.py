@@ -13,18 +13,9 @@ class Moderation(commands.Cog):
     def _init_(self, client):
         self.client = client
     
-    def developer_only(ctx):
-        if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
-            return True
-        else:
-            False
-    
     async def cog_check(self, ctx):
-        #Check if user has admin role
-        if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
-            return True
-        else:
-            return ctx.author.guild_permissions.manage_messages
+        #Check if user has manage messages permissions
+        return ctx.author.guild_permissions.manage_messages
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -33,6 +24,10 @@ class Moderation(commands.Cog):
         for user in muted:
             if user == joineduser:
                 role = discord.utils.get(member.guild.roles, name='Muted')
+                try:
+                    await user.edit(mute=True)
+                except:
+                    print("Voice not found.")
                 await member.add_roles(role)
 
     @commands.command()
@@ -61,7 +56,7 @@ class Moderation(commands.Cog):
                 await ctx.send(f'Unbanned {user.name}#{user.discriminator}')
                 return
     @commands.command()
-    #@commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def mute(self, ctx, *, member : discord.Member):
         global muted
         print(muted)
@@ -78,7 +73,7 @@ class Moderation(commands.Cog):
                 f.write(element)
 
     @commands.command()
-    #@commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def unmute(self, ctx, *, member : discord.Member):
         global muted
         guild = ctx.guild
