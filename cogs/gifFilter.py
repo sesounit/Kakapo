@@ -1,5 +1,4 @@
 import discord
-import re
 from discord.ext import commands
 #gifFilter Cog
 class gifFilter(commands.Cog):
