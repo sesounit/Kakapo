@@ -31,7 +31,7 @@ class Moderation(commands.Cog):
                 await member.add_roles(role)
 
     @commands.command()
-    @commands.has_role("Operations Command")
+    @commands.has_permissions(administrator=True)
     async def clean(self, ctx, amount=5):
         await ctx.channel.purge(limit=amount + 1)
         await ctx.send("Messages have been removed!", delete_after=5)

@@ -70,6 +70,10 @@ Unmutes a user.
 `!roleReactMessage`<br />
 Set up a role selector message in the current channel
 
+`!dog !doge !doggeg !shiba !shibainu`<br />
+Posts a random Shiba Inu picture, courtesy of http://shibe.online/
+Idea by Dallkori#3909
+
 ## Installation
 To install it, your system needs the following dependencies on your project.
 
