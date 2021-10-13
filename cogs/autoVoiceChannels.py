@@ -85,7 +85,8 @@ class autoVoiceChannels(commands.Cog):
             channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.delete()
     @commands.command()
-    async def limit(self, ctx, limiter, *, channelName):
+    async def limit(self, ctx, limiter):
+        channelName = ctx.message.author.voice.channel.name
         if limiter == 'None' or limiter == 'none' or limiter == 0:
             channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.edit(user_limit=0)
