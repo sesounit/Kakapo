@@ -48,6 +48,14 @@ async def unload(ctx, extension):
     else:
         print("Caller is not a developer")
 
+@client.command()
+async def reload(ctx, extension):
+    if developer_only(ctx):
+        client.reload_extension(f'cogs.{extension}')
+        print(f"Successfully reloaded cogs.{extension}")
+    else:
+        print("Caller is not a developer")
+
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')

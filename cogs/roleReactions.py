@@ -13,9 +13,8 @@ class reactForRoles(commands.Cog):
 	def __init__ (self, client):
 		self.client = client
 
-	
-
 	@commands.command()
+	@commands.has_permissions(administrator=True)
 	async def roleReactMessage(self, context):
 		global msg_id
 		global msg
@@ -73,7 +72,6 @@ class reactForRoles(commands.Cog):
 	@commands.Cog.listener()
 	async def on_raw_reaction_remove(self, payload):
 		global msg_id
-		
 		message_id = payload.message_id
 		
 		if message_id == msg_id:
