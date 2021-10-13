@@ -94,8 +94,9 @@ class autoVoiceChannels(commands.Cog):
             channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.edit(user_limit=limiter)
     @commands.command()
-    async def lock(self, ctx, *, channelName):
+    async def lock(self, ctx):
         global lockedchannels
+        channelName = ctx.message.author.voice.channel.name
         for channel in lockedchannels:
             if channel == channelName:
                 await ctx.send("Channel already locked.")
@@ -108,8 +109,9 @@ class autoVoiceChannels(commands.Cog):
                 membercount = (membercount + 1)
             await channelName.edit(user_limit=membercount)
     @commands.command()
-    async def unlock(self, ctx, *, channelName):
+    async def unlock(self, ctx):
         global lockedchannels
+        channelName = ctx.message.author.voice.channel.name
         for channel in lockedchannels:
             if channel == channelName:
                 realChannelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
