@@ -2,7 +2,7 @@ import discord, requests
 from discord.ext import commands
 
 class shiba(commands.Cog):
-    def _init_(self, client):
+    def __init__(self, client):
         self.client = client
 
     @commands.command(aliases=['dog', 'doge', 'dogeg','shibainu'])
