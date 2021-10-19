@@ -7,7 +7,7 @@ import time
 load_dotenv()
 
 
-class helpCommands(commands.Cog):
+class helperCommands(commands.Cog):
 
 	def __init__ (self, client):
 		self.client = client
@@ -142,4 +142,4 @@ General Voice Channels
 
 
 def setup(client):
-	client.add_cog(helpCommands(client))
+	client.add_cog(helperCommands(client))
