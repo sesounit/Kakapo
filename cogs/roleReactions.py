@@ -63,7 +63,7 @@ class reactForRoles(commands.Cog):
 				await member.remove_roles(role)
 
 
-			if payload.user_id != 822271438031159358:
+			if payload.user_id != 822271438031159358 or 653786329121030145:
 				await msg.clear_reactions()
 				await msg.add_reaction('1️⃣')
 				await msg.add_reaction('2️⃣')
