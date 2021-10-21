@@ -5,7 +5,7 @@ class shiba(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['dog', 'doge', 'dogeg','shibainu'])
+    @commands.command(aliases=['dog', 'doge', 'dogeg','shibainu', 'shub','shobe','shuber','shober'])
     async def shiba(self,ctx):
         #Get shiba picture
         shiba_url = requests.get("http://shibe.online/api/shibes").json()
