@@ -40,11 +40,10 @@ class musicSystem(commands.Cog):
         global voicestopped
         if voicestopped == False:
             voice = discord.utils.get(self.client.voice_clients, guild = guild2)
-            print(voice)
             if voice == None:
-                print('None')
+                pass
             elif voice.is_playing():
-                print('Already Playing')
+                pass
             else:
                 try:
                     videolink = next(iter(backlog))
@@ -60,7 +59,7 @@ class musicSystem(commands.Cog):
                 if voice.is_playing == False:
                     await self.timeout.start()
         else:
-            print('Stopped')
+            pass
 
     @tasks.loop(minutes=25)
     async def timeout(self):

@@ -43,26 +43,27 @@ async def unload(ctx, extension):
 @client.command()
 async def reload(ctx, extension):
     if developer_only(ctx):
-        client.reload_extension(f'cogs.{extension}')
-        print(f"Successfully reloaded cogs.{extension}")
+        if extension == "all" or extension == "All":
+            for filename in os.listdir('./cogs'):
+                try:
+                    if filename.endswith('.py'):
+                        client.reload_extension(f'cogs.{filename[:-3]}')
+                        print(f"Successfully reloaded cogs.{filename[:-3]}")
+                except:
+                    print(f"WARNING: Failed to load cogs.{filename[:-3]}")
+            print("Reload complete.")    
+        else:
+            client.reload_extension(f'cogs.{extension}')
+            print(f"Successfully reloaded cogs.{extension}")
     else:
         print("Caller is not a developer")
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        client.load_extension(f'cogs.{filename[:-3]}')
-
-# Not at all necessary, but I like a version notes command, and the one I've used in the past looks nice.
-@client.command(name='version')
-async def version(context):
-
-    mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-    mainEmbed.add_field(name="Changes:", value="Music can now be searched for via text, help commands added.")
-    mainEmbed.add_field(name="Version Code:", value="v0.9.2", inline=False)
-    mainEmbed.add_field(name="Date Released:", value="October 20, 2021", inline=False)
-    mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Fletch#0617, Dildo Sagbag#8107.")
-
-    await context.message.channel.send(embed=mainEmbed)
+        try:
+            client.load_extension(f'cogs.{filename[:-3]}')
+        except:
+            print(f"WARNING: Failed to load cogs.{filename[:-3]}")
 
 #Kill Bot
 @client.command()
@@ -72,10 +73,5 @@ async def kill(ctx):
         sys.exit()
     else:
         await ctx.send('You do not have the authority to kill the bot.')
-
-#Simple Ping Check
-@client.command()
-async def ping(ctx):
-    await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
 client.run(os.getenv("discord_token"))
