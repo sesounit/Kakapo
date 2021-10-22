@@ -108,7 +108,6 @@ class musicSystem(commands.Cog):
                     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
                     await ctx.message.channel.send(embed=ListEmbed)
                     nowPlaying = video_link
-                    await ctx.invoke(self.client.get_command('nowPlaying'))
 
                 else:
                     voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
