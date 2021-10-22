@@ -11,10 +11,18 @@ backlog = []
 voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio', 'default_search' : 'auto'}
+nowPlaying = 'Nada'
 #musicSystem Cog
 class musicSystem(commands.Cog):
     def __init__(self, client):
         self.client = client
+
+    @commands.command(aliases=['np', 'NP','nP', 'Np', 'Nowplaying', 'nowplaying', 'NowPlaying'])
+    async def nowPlaying(self, ctx):
+        global nowPlaying
+        ListEmbed = discord.Embed(title="Now Playing:", description=nowPlaying, color=0x0000ff)
+        ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+        await ctx.message.channel.send(embed=ListEmbed)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -25,6 +33,7 @@ class musicSystem(commands.Cog):
     #This has some debugging phrases that print to the console. Not really necessary anymore, but would be helpful if something were to go wrong.
     @tasks.loop(seconds=5)
     async def nextinqueue(self):
+        global nowPlaying
         global ydl_opts
         global guild2
         global backlog
@@ -44,7 +53,7 @@ class musicSystem(commands.Cog):
                         URL = info['format'][0]['url']
                     voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     backlog.remove(videolink)
-                    print(backlog)
+                    nowPlaying = videolink
                 except:
                     pass
             if voice != None:
@@ -69,6 +78,7 @@ class musicSystem(commands.Cog):
 
     @commands.command(aliases=['P', 'p', 'Play'])
     async def play(self, ctx, *, video_link : str):
+        global nowPlaying
         voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
         global ydl_opts
         global backlog
@@ -80,52 +90,67 @@ class musicSystem(commands.Cog):
 
         if video_link == 'Next':
             video_link = next(iter(backlog))
-        
-        if "https://" not in video_link:
-            videosSearch = VideosSearch(video_link, limit = 1)
-            videosResult = await videosSearch.next()
-            video_link = videosResult['result'][0]['link']
-        if voice != None:
-            if voice.is_playing():
-                with YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(video_link, download=False)
-                    URL = info['formats'][0]['url']
-                backlog.append(video_link)
-                ListEmbed = discord.Embed(title="Added to Queue", description=backlog, color=0x0000ff)
-                ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                await ctx.message.channel.send(embed=ListEmbed)
+        try:
+            if "https://" not in video_link:
+                videosSearch = VideosSearch(video_link, limit = 1)
+                videosResult = await videosSearch.next()
+                video_link = videosResult['result'][0]['link']
+        except:
+            await ctx.send("A problem occured while trying to search Youtube.")
+        try:
+            if voice != None:
+                if voice.is_playing():
+                    with YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(video_link, download=False)
+                        URL = info['formats'][0]['url']
+                    backlog.append(video_link)
+                    ListEmbed = discord.Embed(title="Added to Queue", description=backlog, color=0x0000ff)
+                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+                    await ctx.message.channel.send(embed=ListEmbed)
+                    nowPlaying = video_link
+                    await ctx.invoke(self.client.get_command('nowPlaying'))
 
+                else:
+                    voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+                    with YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(video_link, download=False)
+                        URL = info['formats'][0]['url']
+                    voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+                    nowPlaying = video_link
+                    await ctx.invoke(self.client.get_command('nowPlaying'))
             else:
-                voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
                 with YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(video_link, download=False)
                     URL = info['formats'][0]['url']
+                await voiceChannel.connect()
+                voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
                 voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-        else:
-            with YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(video_link, download=False)
-                URL = info['formats'][0]['url']
-            await voiceChannel.connect()
-            voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
-            voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-
+                nowPlaying = video_link
+                await ctx.invoke(self.client.get_command('nowPlaying'))
+        except:
+            await ctx.send("A problem occured while trying to play.")
     @commands.command()
     async def skip(self, ctx):
-        global voicestopped
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        try:
+            global nowPlaying
+            global voicestopped
+            voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        
+            videolink = next(iter(backlog))
+            if voice.is_playing():
+                voice.stop()
+            ydl_opts = {'format': 'bestaudio'}
 
-        if voice.is_playing():
-            voice.stop()
-        videolink = next(iter(backlog))
-        ydl_opts = {'format': 'bestaudio'}
-
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(videolink, download=False)
-            URL = info['formats'][0]['url']
-        voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-        backlog.remove(videolink)
-        voicestopped = False
-        print(backlog)
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(videolink, download=False)
+                URL = info['formats'][0]['url']
+            voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+            backlog.remove(videolink)
+            voicestopped = False
+            nowPlaying = videolink
+            await ctx.invoke(self.client.get_command('nowPlaying'))
+        except:
+            await ctx.send("There is nothing in the queue.")
 
     @commands.command()
     async def leave(self, ctx):
@@ -153,10 +178,12 @@ class musicSystem(commands.Cog):
 
     @commands.command()
     async def stop(self, ctx):
+        global nowPlaying
         voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
         voice.stop()
         global voicestopped
         voicestopped = True
+        nowPlaying = 'Nada'
 
     @commands.command()
     async def queue(self, ctx):
