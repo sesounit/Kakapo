@@ -1,5 +1,6 @@
 const.py
 muted.txt
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
