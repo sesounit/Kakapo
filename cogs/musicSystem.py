@@ -17,7 +17,7 @@ class musicSystem(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['np', 'NP','nP', 'Np', 'Nowplaying', 'nowplaying', 'NowPlaying'])
+    @commands.command(aliases=['np'])
     async def nowPlaying(self, ctx):
         global nowPlaying
         ListEmbed = discord.Embed(title="Now Playing:", description=nowPlaying, color=0x0000ff)
