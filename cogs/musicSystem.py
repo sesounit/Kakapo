@@ -67,7 +67,7 @@ class musicSystem(commands.Cog):
     #The youtube-dl shit that actually plays the music could be made into a function to avoid copy pasting several times, but this is for free so. ¯\_(ツ)_/¯
     #Also don't touch this part without telling me, it'll probably break if you so much as breathe on it.
 
-    @commands.command(aliases=['P', 'p', 'Play'])
+    @commands.command(aliases=['p'])
     async def play(self, ctx, *, video_link : str):
         voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
         global ydl_opts
@@ -143,7 +143,7 @@ class musicSystem(commands.Cog):
         else:
             ctx.send('No audio is playing currently.')
 
-    @commands.command(aliases=['Unpause', 'unpause', 'Resume'])
+    @commands.command(aliases=['unpause'])
     async def resume(self, ctx):
         voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_paused():
@@ -164,7 +164,7 @@ class musicSystem(commands.Cog):
         ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
         await ctx.message.channel.send(embed=ListEmbed)
 
-    @commands.command(aliases=['Clear', 'clear', 'Empty'])
+    @commands.command(aliases=['clear'])
     async def empty(self, ctx):
         global backlog
         backlog = []
