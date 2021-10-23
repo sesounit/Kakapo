@@ -23,18 +23,32 @@ class miscCommands(commands.Cog):
     #Calculate
     @commands.command()
     async def calculate(self, ctx, query_first, query_operator, query_second):
-        query_one = int(query_first)
-        query_two = int(query_second)
+        query_first = int(query_first)
+        query_second = int(query_second)
         if (query_operator) == ('+'):
-            await ctx.send(query_one + query_two)
+            await ctx.send(query_first + query_second)
         elif (query_operator) == ('-'):
-            await ctx.send(query_one - query_two)
+            await ctx.send(query_first - query_second)
         elif (query_operator) == ('*'):
-            await ctx.send(query_one * query_two)
+            await ctx.send(query_first * query_second)
         elif (query_operator) == ('/'):
-            await ctx.send(query_one / query_two)
+            await ctx.send(query_first / query_second)
         else:
             ctx.send('Calculation failed, remember to use +, -, *, or /, as well as spacing out the request.')
+    
+            ''' Future-proofing this command. Python 3.10 has a match-case function that we will use when we switch to 3.10
+            match query_operator:
+                case '+':
+                    await ctx.send(query_first + query_second)
+                case '-':
+                    await ctx.send(query_first - query_second)
+                case '*':
+                    await ctx.send(query_first * query_second)
+                case '/':
+                    await ctx.send(query_first / query_second)
+                case _:
+                    ctx.send('Calculation failed, remember to use +, -, *, or /, as well as spacing out the request.')
+        '''
 
     @commands.command(name='version')
     async def version(self, context):
