@@ -133,10 +133,9 @@ class musicSystem(commands.Cog):
             global nowPlaying
             global voicestopped
             voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        
-            videolink = next(iter(backlog))
             if voice.is_playing():
                 voice.stop()
+            videolink = next(iter(backlog))
             ydl_opts = {'format': 'bestaudio'}
 
             with YoutubeDL(ydl_opts) as ydl:
