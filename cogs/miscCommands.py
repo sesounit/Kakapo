@@ -61,5 +61,31 @@ class miscCommands(commands.Cog):
 
         await context.message.channel.send(embed=mainEmbed)
 
+    @commands.command(aliases=["d", "rolldice"])
+    async def dice(self, ctx, max, operator=None, *, operatornumber=None):
+        try:
+            dice=int(operator)
+            operatorisdicecount = True
+        except:
+            operatorisdicecount = False
+        max = int(max)
+        if operatorisdicecount == True:
+            whileloop = 0
+            diceresults = []
+            while whileloop < dice:
+                whileloop = whileloop + 1
+                diceresults.append(random.randrange(1, max))
+            await ctx.send(f"Rolled {operator}d{max} {diceresults}")
+        elif operator == None:
+            await ctx.send(f"Rolled 1d{max} {random.randrange(1, max)}")
+        elif operator == '*':
+            await ctx.send(f"Rolled 1d{max} {random.randrange(1, max) * int(operatornumber)}")
+        elif operator == '+':
+            await ctx.send(f"Rolled 1d{max} {random.randrange(1, max) + int(operatornumber)}")
+        elif operator == '-':
+            await ctx.send(f"Rolled 1d{max} {random.randrange(1, max) - int(operatornumber)}")
+        elif operator == '/':
+            await ctx.send(f"Rolled 1d{max} {random.randrange(1, max) / int(operatornumber)}")
+
 def setup(client):
     client.add_cog(miscCommands(client))
