@@ -1,5 +1,5 @@
 # bot.py
-import nextcord, os, sys, random
+import nextcord, os, sys, random, logging
 from dotenv import load_dotenv
 import nacl
 from nextcord.ext import commands, tasks
@@ -9,11 +9,14 @@ intents.members = True
 load_dotenv()
 
 # Debug Helpers
+## bool useful for developer-only commands
 def developer_only(ctx):
     if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
         return True
     else:
         False
+## Logging
+logging.basicConfig(level=logging.INFO)
 
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
 client = commands.Bot(command_prefix='!', intents=intents, help_command = None, case_insensitive=True)
