@@ -1,7 +1,7 @@
-import discord
+import nextcord
 import typing
 import emojis
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,7 +19,7 @@ class reactForRoles(commands.Cog):
 		global msg_id
 		global msg
 		await context.channel.purge(limit=1)
-		embedMessage = discord.Embed(title="React For Roles!", description="React to get your Discord Role!", color=0x0E8643)
+		embedMessage = nextcord.Embed(title="React For Roles!", description="React to get your nextcord Role!", color=0x0E8643)
 		embedMessage.add_field(name="Operative", value="React with :one: for the Operator Role.")
 		embedMessage.add_field(name="Combat Service Support", value="React with :two: for the Combat Service Support Role.", inline=False)
 		embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
@@ -40,26 +40,26 @@ class reactForRoles(commands.Cog):
 		message_id = payload.message_id
 		if message_id == msg_id:
 			guild_id = payload.guild_id
-			guild = discord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
+			guild = nextcord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
 
 
 			if payload.emoji.name == '1️⃣':
 			
-				role = discord.utils.get(guild.roles, name = 'Operator')
+				role = nextcord.utils.get(guild.roles, name = 'Operator')
 				member = payload.member
 				await member.add_roles(role)
 
-				role = discord.utils.get(guild.roles, name = 'Combat Service Support')
+				role = nextcord.utils.get(guild.roles, name = 'Combat Service Support')
 				await member.remove_roles(role)
 
 
 			if payload.emoji.name == '2️⃣':
 
-				role = discord.utils.get(guild.roles, name = 'Combat Service Support')
+				role = nextcord.utils.get(guild.roles, name = 'Combat Service Support')
 				member = payload.member
 				await member.add_roles(role)
 
-				role = discord.utils.get(guild.roles, name = 'Operator')
+				role = nextcord.utils.get(guild.roles, name = 'Operator')
 				await member.remove_roles(role)
 
 
@@ -76,16 +76,16 @@ class reactForRoles(commands.Cog):
 		
 		if message_id == msg_id:
 			guild_id = payload.guild_id
-			guild = discord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
+			guild = nextcord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
 
 			if payload.emoji.name == '1️⃣':
-				role = discord.utils.get(guild.roles, name = 'Operator')
-				member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+				role = nextcord.utils.get(guild.roles, name = 'Operator')
+				member = nextcord.utils.find(lambda m : m.id == payload.user_id, guild.members)
 				await member.remove_roles(role)
 
 			elif payload.emoji.name == '2️⃣':
-				role = discord.utils.get(guild.roles, name = 'Combat Service Support')
-				member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+				role = nextcord.utils.get(guild.roles, name = 'Combat Service Support')
+				member = nextcord.utils.find(lambda m : m.id == payload.user_id, guild.members)
 				await member.remove_roles(role)
 
 

@@ -1,5 +1,5 @@
-import discord, requests
-from discord.ext import commands
+import nextcord, requests
+from nextcord.ext import commands
 import random
 class miscCommands(commands.Cog):
     def __init__(self, client):
@@ -53,7 +53,7 @@ class miscCommands(commands.Cog):
     @commands.command(name='version')
     async def version(self, context):
 
-        mainEmbed = discord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
+        mainEmbed = nextcord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
         mainEmbed.add_field(name="Changes:", value="Music can now be searched for via text, music quality of life additions.")
         mainEmbed.add_field(name="Version Code:", value="v0.9.3", inline=False)
         mainEmbed.add_field(name="Date Released:", value="October 21, 2021", inline=False)

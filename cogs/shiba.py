@@ -1,5 +1,5 @@
-import discord, requests
-from discord.ext import commands
+import nextcord, requests
+from nextcord.ext import commands
 
 class shiba(commands.Cog):
     def __init__(self, client):
@@ -11,7 +11,7 @@ class shiba(commands.Cog):
         shiba_url = requests.get("http://shibe.online/api/shibes").json()
 
         #Create embed and assigned Shiba picture to it
-        shiba_embed = discord.Embed()
+        shiba_embed = nextcord.Embed()
         shiba_embed.set_image(url=shiba_url[0])
 
         #Send embedded shiba picture

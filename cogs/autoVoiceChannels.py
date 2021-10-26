@@ -1,6 +1,6 @@
 
-import discord
-from discord.ext import commands, tasks
+import nextcord
+from nextcord.ext import commands, tasks
 channelnumber=1
 lockedchannels=[]
 #autoVoiceChannels Cog
@@ -23,7 +23,7 @@ class autoVoiceChannels(commands.Cog):
                         else:
                             voice_channel_list.append(channelstring)
         for channel in voice_channel_list:
-            channelName = discord.utils.get(member.guild.voice_channels, name=channel)
+            channelName = nextcord.utils.get(member.guild.voice_channels, name=channel)
             members = channelName.members
             membercount = 0
             for member in members:
@@ -37,7 +37,7 @@ class autoVoiceChannels(commands.Cog):
         for channel in lockedchannels:
             if before.channel.name == channel:
                 print(channel)
-                channelName = discord.utils.get(member.guild.voice_channels, name=channel)
+                channelName = nextcord.utils.get(member.guild.voice_channels, name=channel)
                 members = channelName.members
                 membercount = 0
                 for member in members:
@@ -50,27 +50,27 @@ class autoVoiceChannels(commands.Cog):
             print(memberstatus)
             if memberstatus == 'offline':
                 await member.voice.channel.clone(name=f"#{channelnumber} [General]", reason=None)
-                newChannel = discord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [General]")
+                newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [General]")
                 await newChannel.move(beginning=True, reason="Automatic")
                 await member.move_to(newChannel)
                 channelnumber = (channelnumber + 1)
             else:
                 #The try except block is unecessary, but for some reason, when I removed it, it bricked. So uhh, yeah not sure what's going on there.
                 try:
-                    Channel = discord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
+                    Channel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
                     await member.voice.channel.clone(name=f"#{channelnumber} [{memberstatus}]", reason=None)
-                    newChannel = discord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [{memberstatus}]")
+                    newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [{memberstatus}]")
                     await newChannel.move(beginning=True, reason="Automatic")
                     await member.move_to(newChannel)
                     channelnumber = (channelnumber + 1)
                 except:
                     await member.voice.channel.clone(name=f"#NC [{memberstatus}]", reason=None)
-                    newChannel = discord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
+                    newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
                     await newChannel.move(beginning=True, reason="Automatic")
                     await member.move_to(newChannel)
         
         if '#' in before.channel.name:
-            channelName = discord.utils.get(member.guild.voice_channels, name=before.channel.name)
+            channelName = nextcord.utils.get(member.guild.voice_channels, name=before.channel.name)
             members = channelName.members
             membercount = 0
             for member in members:
@@ -82,17 +82,17 @@ class autoVoiceChannels(commands.Cog):
     @commands.command()
     async def destroy(self, ctx, *, channelName):
         if ctx.message.author.id == 267469338557153300:
-            channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
+            channelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.delete()
     @commands.command()
     async def limit(self, ctx, limiter):
         channelName = ctx.message.author.voice.channel.name
         if limiter == 'None' or limiter == 'none' or limiter == 0:
-            channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
+            channelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.edit(user_limit=0)
         else:
             limiter = int(limiter)
-            channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
+            channelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
             await channelName.edit(user_limit=limiter)
     @commands.command()
     async def lock(self, ctx):
@@ -103,7 +103,7 @@ class autoVoiceChannels(commands.Cog):
                 await ctx.send("Channel already locked.")
         else:
             lockedchannels.append(channelName)
-            channelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
+            channelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
             members = channelName.members
             membercount = 0
             for member in members:
@@ -115,7 +115,7 @@ class autoVoiceChannels(commands.Cog):
         channelName = ctx.message.author.voice.channel.name
         for channel in lockedchannels:
             if channel == channelName:
-                realChannelName = discord.utils.get(ctx.guild.voice_channels, name=channelName)
+                realChannelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
                 members = realChannelName.members
                 for member in members:
                     if ctx.message.author == member:

@@ -1,8 +1,8 @@
-import discord, os, sys, random
+import nextcord, os, sys, random
 from dotenv import load_dotenv
 import nacl
 from yt_dlp import YoutubeDL
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 from youtubesearchpython.__future__ import *
 
 #Music Related
@@ -20,7 +20,7 @@ class musicSystem(commands.Cog):
     @commands.command(aliases=['np'])
     async def nowPlaying(self, ctx):
         global nowPlaying
-        ListEmbed = discord.Embed(title="Now Playing:", description=nowPlaying, color=0x0000ff)
+        ListEmbed = nextcord.Embed(title="Now Playing:", description=nowPlaying, color=0x0000ff)
         ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
         await ctx.message.channel.send(embed=ListEmbed)
 
@@ -39,7 +39,7 @@ class musicSystem(commands.Cog):
         global backlog
         global voicestopped
         if voicestopped == False:
-            voice = discord.utils.get(self.client.voice_clients, guild = guild2)
+            voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
             if voice == None:
                 pass
             elif voice.is_playing():
@@ -50,7 +50,7 @@ class musicSystem(commands.Cog):
                     with YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(videolink, download=False)
                         URL = info['format'][0]['url']
-                    voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+                    voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     backlog.remove(videolink)
                     nowPlaying = videolink
                 except:
@@ -63,7 +63,7 @@ class musicSystem(commands.Cog):
 
     @tasks.loop(minutes=25)
     async def timeout(self):
-        voice = discord.utils.get(self.client.voice_clients, guild = guild2)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
 
         if voice.is_playing == True:
             await self.timeout.stop()
@@ -78,7 +78,7 @@ class musicSystem(commands.Cog):
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, video_link : str):
         global nowPlaying
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         global ydl_opts
         global backlog
         global guild2
@@ -103,17 +103,17 @@ class musicSystem(commands.Cog):
                         info = ydl.extract_info(video_link, download=False)
                         URL = info['formats'][0]['url']
                     backlog.append(video_link)
-                    ListEmbed = discord.Embed(title="Added to Queue", description=backlog, color=0x0000ff)
+                    ListEmbed = nextcord.Embed(title="Added to Queue", description=backlog, color=0x0000ff)
                     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
                     await ctx.message.channel.send(embed=ListEmbed)
                     nowPlaying = video_link
 
                 else:
-                    voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+                    voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
                     with YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(video_link, download=False)
                         URL = info['formats'][0]['url']
-                    voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+                    voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     nowPlaying = video_link
                     await ctx.invoke(self.client.get_command('nowPlaying'))
             else:
@@ -121,8 +121,8 @@ class musicSystem(commands.Cog):
                     info = ydl.extract_info(video_link, download=False)
                     URL = info['formats'][0]['url']
                 await voiceChannel.connect()
-                voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
-                voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+                voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
+                voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                 nowPlaying = video_link
                 await ctx.invoke(self.client.get_command('nowPlaying'))
         except:
@@ -132,7 +132,7 @@ class musicSystem(commands.Cog):
         try:
             global nowPlaying
             global voicestopped
-            voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+            voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
             if voice.is_playing():
                 voice.stop()
             videolink = next(iter(backlog))
@@ -141,7 +141,7 @@ class musicSystem(commands.Cog):
             with YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(videolink, download=False)
                 URL = info['formats'][0]['url']
-            voice.play(discord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+            voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
             backlog.remove(videolink)
             voicestopped = False
             nowPlaying = videolink
@@ -151,7 +151,7 @@ class musicSystem(commands.Cog):
 
     @commands.command()
     async def leave(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_connected():
             await voice.disconnect()
         else:
@@ -159,7 +159,7 @@ class musicSystem(commands.Cog):
 
     @commands.command()
     async def pause(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_playing():
             voice.pause()
         else:
@@ -167,7 +167,7 @@ class musicSystem(commands.Cog):
 
     @commands.command(aliases=['unpause'])
     async def resume(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_paused():
             voice.resume()
         else:
@@ -176,7 +176,7 @@ class musicSystem(commands.Cog):
     @commands.command()
     async def stop(self, ctx):
         global nowPlaying
-        voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
+        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         voice.stop()
         global voicestopped
         voicestopped = True
@@ -184,7 +184,7 @@ class musicSystem(commands.Cog):
 
     @commands.command()
     async def queue(self, ctx):
-        ListEmbed = discord.Embed(title="In queue", description=backlog, color=0x0000ff)
+        ListEmbed = nextcord.Embed(title="In queue", description=backlog, color=0x0000ff)
         ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
         await ctx.message.channel.send(embed=ListEmbed)
 
