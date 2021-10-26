@@ -10,7 +10,7 @@ FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconne
 backlog = []
 voicestopped = False
 guild2 = 'Null'
-ydl_opts = {'format': 'bestaudio', 'default_search' : 'auto'}
+ydl_opts = {'format': 'bestaudio'}
 nowPlaying = 'Nada'
 #musicSystem Cog
 class musicSystem(commands.Cog):
@@ -26,7 +26,6 @@ class musicSystem(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.client.wait_until_ready()
         print("Music System Online")
         await self.nextinqueue.start()
     
@@ -54,12 +53,10 @@ class musicSystem(commands.Cog):
                     backlog.remove(videolink)
                     nowPlaying = videolink
                 except:
-                    pass
-            if voice != None:
-                if voice.is_playing == False:
-                    await self.timeout.start()
-        else:
-            pass
+                    print("Error Encountered in Nextinqueue")
+        if voice != None:
+            if voice.is_playing == False:
+                await self.timeout.start()
 
     @tasks.loop(minutes=25)
     async def timeout(self):
@@ -182,7 +179,7 @@ class musicSystem(commands.Cog):
         voicestopped = True
         nowPlaying = 'Nada'
 
-    @commands.command()
+    @commands.command(aliases=["Q"])
     async def queue(self, ctx):
         ListEmbed = nextcord.Embed(title="In queue", description=backlog, color=0x0000ff)
         ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
