@@ -79,6 +79,7 @@ class musicSystem(commands.Cog):
         global nextinqueueactive
         print(nextinqueueactive)
         if nextinqueueactive == False:
+            ctx.send("Setup Function Called, retry request.")
             nextinqueueactive = True
             await self.nextinqueue.start()
         global nowPlaying
