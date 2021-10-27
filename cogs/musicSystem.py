@@ -55,8 +55,7 @@ class musicSystem(commands.Cog):
                     backlog.remove(video_link)
                     nowPlaying = video_link
                 except:
-                    print('')
-                
+                    pass
         if voice != None:
             if voice.is_playing == False:
                 await self.timeout.start()
