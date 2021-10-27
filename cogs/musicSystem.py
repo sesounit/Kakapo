@@ -8,6 +8,7 @@ from youtubesearchpython.__future__ import *
 #Music Related
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 backlog = []
+nextinqueueactive = False
 voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio'}
@@ -16,7 +17,8 @@ nowPlaying = 'Nada'
 class musicSystem(commands.Cog):
     def __init__(self, client):
         self.client = client
-
+    nextinqueueactive = False
+    voicestopped = False
     @commands.command(aliases=['np'])
     async def nowPlaying(self, ctx):
         global nowPlaying
@@ -26,9 +28,9 @@ class musicSystem(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Music System Online")
+        global nextinqueueactive
+        nextinqueueactive = True
         await self.nextinqueue.start()
-    
     #This has some debugging phrases that print to the console. Not really necessary anymore, but would be helpful if something were to go wrong.
     @tasks.loop(seconds=5)
     async def nextinqueue(self):
@@ -37,8 +39,8 @@ class musicSystem(commands.Cog):
         global guild2
         global backlog
         global voicestopped
+        voice = discord.utils.get(self.client.voice_clients, guild = guild2)
         if voicestopped == False:
-            voice = discord.utils.get(self.client.voice_clients, guild = guild2)
             if voice == None:
                 pass
             elif voice.is_playing():
@@ -74,6 +76,11 @@ class musicSystem(commands.Cog):
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, video_link : str):
+        global nextinqueueactive
+        print(nextinqueueactive)
+        if nextinqueueactive == False:
+            nextinqueueactive = True
+            await self.nextinqueue.start()
         global nowPlaying
         voice = discord.utils.get(self.client.voice_clients, guild = ctx.guild)
         global ydl_opts
