@@ -35,40 +35,44 @@ class autoVoiceChannels(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         for channel in lockedchannels:
-            if before.channel.name == channel:
-                print(channel)
-                channelName = nextcord.utils.get(member.guild.voice_channels, name=channel)
-                members = channelName.members
-                membercount = 0
-                for member in members:
-                    membercount = (membercount + 1)
-                await channelName.edit(user_limit=membercount)
-
-        if member.voice.channel.id == 694641754686881883:
-            global channelnumber
-            memberstatus = str(member.status)
-            print(memberstatus)
-            if memberstatus == 'offline':
-                await member.voice.channel.clone(name=f"#{channelnumber} [General]", reason=None)
-                newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [General]")
-                await newChannel.move(beginning=True, reason="Automatic")
-                await member.move_to(newChannel)
-                channelnumber = (channelnumber + 1)
-            else:
-                #The try except block is unecessary, but for some reason, when I removed it, it bricked. So uhh, yeah not sure what's going on there.
-                try:
-                    Channel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
-                    await member.voice.channel.clone(name=f"#{channelnumber} [{memberstatus}]", reason=None)
-                    newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [{memberstatus}]")
+            try:
+                if before.channel.name == channel:
+                    channelName = nextcord.utils.get(member.guild.voice_channels, name=channel)
+                    members = channelName.members
+                    membercount = 0
+                    for member in members:
+                        membercount = (membercount + 1)
+                    await channelName.edit(user_limit=membercount)
+            except:
+                #Don't question this.
+                print('')
+        try:
+            if member.voice.channel.id == 694641754686881883:
+                global channelnumber
+                memberstatus = str(member.status)
+                print(memberstatus)
+                if memberstatus == 'offline':
+                    await member.voice.channel.clone(name=f"#{channelnumber} [General]", reason=None)
+                    newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [General]")
                     await newChannel.move(beginning=True, reason="Automatic")
                     await member.move_to(newChannel)
                     channelnumber = (channelnumber + 1)
-                except:
-                    await member.voice.channel.clone(name=f"#NC [{memberstatus}]", reason=None)
-                    newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
-                    await newChannel.move(beginning=True, reason="Automatic")
-                    await member.move_to(newChannel)
-        
+                else:
+                    #The try except block is unecessary, but for some reason, when I removed it, it bricked. So uhh, yeah not sure what's going on there.
+                    try:
+                        Channel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
+                        await member.voice.channel.clone(name=f"#{channelnumber} [{memberstatus}]", reason=None)
+                        newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#{channelnumber} [{memberstatus}]")
+                        await newChannel.move(beginning=True, reason="Automatic")
+                        await member.move_to(newChannel)
+                        channelnumber = (channelnumber + 1)
+                    except:
+                        await member.voice.channel.clone(name=f"#NC [{memberstatus}]", reason=None)
+                        newChannel = nextcord.utils.get(member.guild.voice_channels, name=f"#NC [{memberstatus}]")
+                        await newChannel.move(beginning=True, reason="Automatic")
+                        await member.move_to(newChannel)
+        except:
+            print('')
         if '#' in before.channel.name:
             channelName = nextcord.utils.get(member.guild.voice_channels, name=before.channel.name)
             members = channelName.members
