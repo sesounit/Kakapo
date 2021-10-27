@@ -19,6 +19,12 @@ Load cog.
 `!unload <cogs name without .py from folder /cogs>`<br />
 Unload cog.
 
+`!reload`<br />
+Reloads all cogs
+
+`!reload <cogs name without .py from folder /cogs>`<br />
+Reloads a specific cog
+
 `!version`<br />
 Post the latest changes to the bot.
 

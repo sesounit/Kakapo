@@ -1,21 +1,18 @@
-import discord, requests
-from discord.ext import commands
+import nextcord, requests, aiohttp
+from nextcord.ext import commands
 
 class shiba(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases=['dog', 'doge', 'dogeg','shibainu', 'shub','shobe','shuber','shober'])
+    @commands.command(aliases=['dog', 'doge', 'dogeg','shibainu', 'shib', 'shub','shobe','shuber','shober'])
     async def shiba(self,ctx):
-        #Get shiba picture
-        shiba_url = requests.get("http://shibe.online/api/shibes").json()
 
-        #Create embed and assigned Shiba picture to it
-        shiba_embed = discord.Embed()
-        shiba_embed.set_image(url=shiba_url[0])
-
-        #Send embedded shiba picture
-        await ctx.send(embed=shiba_embed)
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://shibe.online/api/shibes") as shiba_url :
+                if shiba_url.status == 200:
+                    shiba_pic = await shiba_url.json()
+                    await ctx.send(shiba_pic[0])
 
 def setup(client):
     client.add_cog(shiba(client))

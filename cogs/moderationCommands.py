@@ -1,11 +1,11 @@
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 global muted
 my_file = open("muted.txt", "r")
 muted = my_file.readlines()
 my_file.close()
 print(muted)
-intents = discord.Intents.default()
+intents = nextcord.Intents.default()
 intents.members = True
 
 #Moderation Cog
@@ -23,7 +23,7 @@ class Moderation(commands.Cog):
         joineduser = str(member)
         for user in muted:
             if user == joineduser:
-                role = discord.utils.get(member.guild.roles, name='Muted')
+                role = nextcord.utils.get(member.guild.roles, name='Muted')
                 try:
                     await user.edit(mute=True)
                 except:
@@ -38,7 +38,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def ban(self, ctx, member : discord.Member, *, reason=None):
+    async def ban(self, ctx, member : nextcord.Member, *, reason=None):
         await member.ban(reason=reason)
         await ctx.send(f'Banned {member.mention}')
 
@@ -57,11 +57,11 @@ class Moderation(commands.Cog):
                 return
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def mute(self, ctx, *, member : discord.Member):
+    async def mute(self, ctx, *, member : nextcord.Member):
         global muted
         print(muted)
         guild = ctx.guild
-        role = discord.utils.get(ctx.guild.roles, name='Muted')
+        role = nextcord.utils.get(ctx.guild.roles, name='Muted')
         user = member
         await user.add_roles(role)
         await user.edit(mute=True)
@@ -74,10 +74,10 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def unmute(self, ctx, *, member : discord.Member):
+    async def unmute(self, ctx, *, member : nextcord.Member):
         global muted
         guild = ctx.guild
-        role = discord.utils.get(ctx.guild.roles, name='Muted')
+        role = nextcord.utils.get(ctx.guild.roles, name='Muted')
         user = member
         await user.remove_roles(role)
         await user.edit(mute=False)
