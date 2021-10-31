@@ -49,22 +49,119 @@ class helperCommands(commands.Cog):
 
 
 	@commands.command(aliases=['timezone', 'timezones'])
-	async def time(self, context):
-		timenow = datetime.datetime.now()
-		embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is a list of different time zones based on the current time.', color=0x0E8643)
-		embedMessage.add_field(name="PST (UTC-7)", value=f"{timenow.hour-3}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="MST (UTC-6)", value=f"{timenow.hour-2}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="CST (UTC-5)", value=f"{timenow.hour-1}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="EST (UTC-4)", value=f"{timenow.hour}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="UTC", value=f"{timenow.hour+4}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="BST (UTC+1)", value=f"{timenow.hour+5}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="CEST (UTC+2)", value=f"{timenow.hour+6}:{timenow.minute}:{timenow.second}")
-		embedMessage.add_field(name="MSK (UTC+3)", value=f"{timenow.hour+7}:{timenow.minute}:{timenow.second}")
-		embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
-		await context.message.channel.send(embed = embedMessage)
-		#print(timenow.hour)
-		#print(timenow.minute)
-		#print(timenow.second)
+	async def time(self, context, *, message = None):
+		def fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(timeOne, timeDifference):
+			base = 2400
+			if int(timeOne) + timeDifference*100 > base:
+				newTime = str((base-int(timeOne))+(timeDifference*100))
+
+				if int(newTime) < 1000:
+					newTime = '0' + newTime
+
+				newTime = newTime[:2] + ":" + newTime[2:]
+				return newTime
+
+			elif int(timeOne) + timeDifference*100 < 0:
+				newTime = str((base + int(timeOne)) + timeDifference*100)
+
+				newTime = newTime[:2] + ":" + newTime[2:]
+				return newTime
+
+			else:
+				newTime = str(int(timeOne) + (timeDifference*100))
+				if int(newTime) < 1000:
+					newTime = '0' + newTime
+
+				newTime = newTime[:2] + ":" + newTime[2:]
+				return newTime
+
+		timeZone = ''
+		if message == None:
+			timenow = datetime.datetime.now()
+			embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is a list of different time zones based on the current time.', color=0x0E8643)
+			embedMessage.add_field(name="PST (UTC-7)", value=f"{timenow.hour-3}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="MST (UTC-6)", value=f"{timenow.hour-2}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="CST (UTC-5)", value=f"{timenow.hour-1}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="EST (UTC-4)", value=f"{timenow.hour}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="UTC", value=f"{timenow.hour+4}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="BST (UTC+1)", value=f"{timenow.hour+5}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="CEST (UTC+2)", value=f"{timenow.hour+6}:{timenow.minute}:{timenow.second}")
+			embedMessage.add_field(name="MSK (UTC+3)", value=f"{timenow.hour+7}:{timenow.minute}:{timenow.second}")
+			embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+			await context.message.channel.send(embed = embedMessage)
+			#print(timenow.hour)
+			#print(timenow.minute)
+			#print(timenow.second)
+
+		else:
+
+			for x in message[:]:
+				if x == ":":
+					newMessage = message.replace(x, '')
+					for x in newMessage[:]:
+						if x == " ":
+							newMessage = newMessage.replace(newMessage[newMessage.index(x):], '')
+
+			for x in message[:]:
+				if x == " ":
+					timeZone = message[message.index(x)+1:]
+					#newMessage.replace()
+
+			if timeZone.lower() == 'est':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, -4)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to EST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="EST (UTC-4)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'pst':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, -7)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to PST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="PST (UTC-7)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'mst':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, -6)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to MST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="MST (UTC-6)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'cst':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, -5)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to CST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="CST (UTC-5)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'bst':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, 1)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to BST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="BST (UTC+1)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'cest':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, 2)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to CEST.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="CEST (UTC+2)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			if timeZone.lower() == 'msk':
+				timeValue = fuckTwentyFourHourClocksWhyCantTheyJustBeOneMillionHoursLongLikeWhyDoIHaveToWrapThisAroundToWorkIHateMyLifeHeySiriHowDoITieANoose(newMessage, 3)
+				embedMessage = nextcord.Embed(title = 'Time Zones', description = 'Here is the time conversion from UTC to MSK.', color=0x0E8643)
+				embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+				embedMessage.add_field(name="MSK (UTC+3)", value = f"{timeValue}")
+				await context.message.channel.send(embed = embedMessage)
+
+			
+
+			#print(timeZone)
+			#print(newMessage)
+
+
 
 
 	@commands.command(aliases=['mod', 'mods', 'modlists', 'mod-list', 'mod-lists'])
