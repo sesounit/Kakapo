@@ -11,6 +11,11 @@ Discord bot for the SESO discord
 - Provides moderation commands for admins
 - Welcome message
 - Supports YouTube video to audio streaming
+- Applies a Tenor Gif Filter to all channels
+- Provides help commands for information as well as other usefull stuff
+- Provides miscellaneous commands for the users
+- Supports the option to send a Reaction Roles message.
+- Shiba...
 
 ## Commands
 `!load <cogs name without .py from folder /cogs>`<br />
