@@ -85,13 +85,73 @@ Set up a role selector message in the current channel
 Posts a random Shiba Inu picture, courtesy of http://shibe.online/
 Idea by Dallkori#3909
 
+`!limit`<br/>
+Limits the amount of people who can join the Voice Channel
+
+`!lock`<br/>
+Locks the current Voice Channel
+
+`!unlock`<br/>
+Unlocks the current Voice Channel
+
+`!destroy`<br/>
+Deletes the current Voice Channel
+
+`!help`<br/>
+provides the User with the purpose of different commands
+
+`!ip`<br/>
+Provides the IP to the Arma 3 server
+
+`!time`<br/>
+either provides the current time or a time conversion
+
+`!modlist`<br/>
+Points to the modlist channel
+
+`!teamspeak`<br/>
+Points to the teamspeak info channel
+
+`!acre`<br/>
+points to the Acre2 info channel
+
+`!training`<br/>
+points to the training documents and manuals
+
+`!logo`<br/>
+Points to where a user can find info on joining the Arma 3 unit
+
+`!rules`<br/>
+Points to where the user can find the rules to the discord and in game.
+
+`!new`<br/>
+Gives the user information regarding the Discord Server.
+
+`!ping`<br/>
+Gives the user the Latency of the bot.
+
+`!8ball`<br/>
+Magic 8ball
+
+`!calculate`<br/>
+Simple calculator
+
+`!dice`<br/>
+Rolls a die
+
 ## Installation
 To install it, your system needs the following dependencies on your project.
 
 ### Dependencies
 - `youtube-dl`
 - `ffmpeg`
-- `discord.py`
+- `nextcord`
+- `dotenv`
+- `datetime`
+- `nacl`
+- `youtube-search-python`
+- `typing`
+- `emojis`
 
 ### Tokens
 Tokens are sourced from `.env`. Create `.env` in the project folder with the following content:
