@@ -13,6 +13,7 @@ voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio'}
 nowPlaying = 'Nada'
+
 #musicSystem Cog
 class musicSystem(commands.Cog):
     def __init__(self, client):
@@ -57,7 +58,7 @@ class musicSystem(commands.Cog):
                 except:
                     pass
         if voice != None:
-            if voice.is_playing == False:
+            if voice.is_playing != True:
                 await self.timeout.start()
 
     @tasks.loop(minutes=25)
