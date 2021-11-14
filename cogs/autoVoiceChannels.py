@@ -10,7 +10,6 @@ class autoVoiceChannels(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def cleaner(self, member):
-        print("Cleaner Running!")
         voice_channel_list = []
         for server in self.client.guilds:
             for channel in server.channels:
