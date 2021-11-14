@@ -7,18 +7,26 @@ from youtubesearchpython.__future__ import *
 #Music Related
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 backlog = ['Nada']
+backlogtitle = ['Nada']
 nextinqueueactive = False
 voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio'}
 
-#External Library
+#Player Extras
 class musicExtras():
     def findsongtitle(url):
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             title = info['title']
             return title
+    #Moving the extraction process to this class for some god damn reason made it go far faster.
+    def extract(url):
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            URL = info['formats'][0]['url']
+            title = info['title']
+        return URL, title
 
 #musicSystem Cog
 class musicSystem(commands.Cog):
@@ -27,17 +35,27 @@ class musicSystem(commands.Cog):
     nextinqueueactive = False
     voicestopped = False
     @commands.command(aliases=['np'])
-    async def nowPlaying(self, ctx):
+    async def nowPlaying(self, ctx, url=None, title=None):
         #This is pretty confusing, but basically it's meant to hyperlink.
-        ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{(musicExtras.findsongtitle(backlog[1]))}]({backlog[1]})", color=0x0000ff)
-        ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-        await ctx.message.channel.send(embed=ListEmbed)
+        if url == None:
+            try:
+                ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{backlogtitle[1]}]({backlog[1]})", color=0x0000ff)
+                ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+                await ctx.message.channel.send(embed=ListEmbed)
+            except:
+                ListEmbed = nextcord.Embed(title="Now Playing:", description="Nothing", color=0x0000ff)
+                ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+                await ctx.message.channel.send(embed=ListEmbed)
+        else:
+            ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{title}]({url})", color=0x0000ff)
+            ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+            await ctx.message.channel.send(embed=ListEmbed)
 
     @commands.command(aliases=['lp', 'last'])
     async def lastPlayed(self, ctx):
         #Try-Except for if last played is 'nada'
         try:
-            ListEmbed = nextcord.Embed(title="Last Played:", description=f"[{(musicExtras.findsongtitle(backlog[0]))}]({backlog[0]})", color=0x0000ff)
+            ListEmbed = nextcord.Embed(title="Last Played:", description=f"[{backlogtitle[0]}]({backlog[0]})", color=0x0000ff)
             ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
             await ctx.message.channel.send(embed=ListEmbed)
         except:
@@ -48,17 +66,12 @@ class musicSystem(commands.Cog):
     @commands.command(aliases=['n'])
     async def next(self, ctx):
         try:
-            ListEmbed = nextcord.Embed(title="Next to be Played:", description=f"[{(musicExtras.findsongtitle(backlog[2]))}]({backlog[2]})", color=0x0000ff)
+            ListEmbed = nextcord.Embed(title="Next to be Played:", description=f"[{backlogtitle[2]}]({backlog[2]})", color=0x0000ff)
             ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
             await ctx.message.channel.send(embed=ListEmbed)
         except:
             await ctx.send('Nothing in queue.')
-
-    async def titledev(self, ctx):
-        url = "https://www.youtube.com/watch?v=2onNq11WHoM"
-        title = musicExtras.findsongtitle(url)
-        await ctx.send(title)
-
+    
     @commands.Cog.listener()
     async def on_ready(self):
         global nextinqueueactive
@@ -70,17 +83,17 @@ class musicSystem(commands.Cog):
         global ydl_opts
         global guild2
         global backlog
+        global backlogtitle
         global voicestopped
         voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
         if voicestopped == False:
-            if voice != None and not voice.isplaying():
+            if voice != None and not voice.is_playing():
                 try:
                     video_link = backlog[2]
-                    with YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(video_link, download=False)
-                        URL = info['formats'][0]['url']
+                    URL = musicExtras.extract(video_link)
                     voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     backlog.remove(backlog[0])
+                    backlog.remove(backlogtitle[0])
                 except:
                     pass
         if voice != None:
@@ -98,13 +111,11 @@ class musicSystem(commands.Cog):
             await voice.disconnect
 
     #Looks weird, probably could be cleaner, but works this way.
-    #The youtube-dl shit that actually plays the music could be made into a function to avoid copy pasting several times, but this is for free so. ¯\_(ツ)_/¯
     #Also don't touch this part without telling me, it'll probably break if you so much as breathe on it.
 
     @commands.command(aliases=['p'])
     async def play(self, ctx, *, video_link : str):
         global nextinqueueactive
-        print(nextinqueueactive)
         if nextinqueueactive == False:
             await ctx.send("Setup Function Called, retry request.")
             nextinqueueactive = True
@@ -112,6 +123,7 @@ class musicSystem(commands.Cog):
         voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         global ydl_opts
         global backlog
+        global backlogtitle
         global guild2
         global voicestopped
         voicestopped = False
@@ -128,32 +140,28 @@ class musicSystem(commands.Cog):
         try:
             if voice != None:
                 if voice.is_playing():
-                    with YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(video_link, download=False)
-                        URL = info['formats'][0]['url']
-                        title = info['title']
+                    URL, title = musicExtras.extract(video_link)
                     ListEmbed = nextcord.Embed(title="Added to Queue", description=f"[{title}]({URL})", color=0x0000ff)
                     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
                     backlog.append(video_link)
+                    backlogtitle.append(title)
                     await ctx.message.channel.send(embed=ListEmbed)
 
                 else:
                     voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-                    with YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(video_link, download=False)
-                        URL = info['formats'][0]['url']
+                    URL, title = musicExtras.extract(video_link)
                     voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     backlog.append(video_link)
-                    await ctx.invoke(self.client.get_command('nowPlaying'))
+                    backlogtitle.append(title)
+                    await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
             else:
-                with YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(video_link, download=False)
-                    URL = info['formats'][0]['url']
+                URL, title = musicExtras.extract(video_link)
                 await voiceChannel.connect()
                 voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
                 voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                 backlog.append(video_link)
-                await ctx.invoke(self.client.get_command('nowPlaying'))
+                backlogtitle.append(title)
+                await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
         except:
             await ctx.send("A problem occured while trying to play.")
     @commands.command()
@@ -161,17 +169,18 @@ class musicSystem(commands.Cog):
         try:
             global voicestopped
             global ydl_opts
+            global backlog
+            global backlogtitle
             voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
             if voice.is_playing():
                 voice.stop()
             videolink = backlog[2]
-            with YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(videolink, download=False)
-                URL = info['formats'][0]['url']
+            URL, title = musicExtras.extract(videolink)
             voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
             backlog.remove(backlog[0])
+            backlogtitle.remove(backlogtitle[0])
             voicestopped = False
-            await ctx.invoke(self.client.get_command('nowPlaying'))
+            await ctx.invoke(self.client.get_command('nowPlaying'), url=videolink, title=title)
         except:
             await ctx.send("There is nothing in the queue.")
 
@@ -201,11 +210,14 @@ class musicSystem(commands.Cog):
 
     @commands.command()
     async def stop(self, ctx):
+        global backlog
+        global backlogtitle
         voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         voice.stop()
         global voicestopped
         voicestopped = True
         backlog.remove(backlog[0])
+        backlogtitle.remove(backlogtitle[0])
 
     @commands.command(aliases=["Q"])
     async def queue(self, ctx):
@@ -227,6 +239,7 @@ class musicSystem(commands.Cog):
         for item in backlog:
             if i > 0:
                 backlog.remove(item)
+                backlogtitle.remove(backlog[i])
             i = i + 1
         await ctx.send('Queue cleared.')
 
