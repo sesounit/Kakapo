@@ -63,10 +63,13 @@ async def reload(ctx, extension):
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
-        try:
-            client.load_extension(f'cogs.{filename[:-3]}')
-        except:
-            print(f"WARNING: Failed to load cogs.{filename[:-3]}")
+        if "ignore" in filename:
+            pass
+        else:
+            try:
+                client.load_extension(f'cogs.{filename[:-3]}')
+            except:
+                print(f"WARNING: Failed to load cogs.{filename[:-3]}")
 
 #Kill Bot
 @client.command()
