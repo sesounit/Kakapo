@@ -36,7 +36,7 @@ class musicSystem(commands.Cog):
     voicestopped = False
     @commands.command(aliases=['np'])
     async def nowPlaying(self, ctx, url=None, title=None):
-        #This is pretty confusing, but basically it's meant to hyperlink.
+        #The Formatting here hyperlinks the URL to the title.
         if url == None:
             try:
                 ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{backlogtitle[1]}]({backlog[1]})", color=0x0000ff)
@@ -71,7 +71,7 @@ class musicSystem(commands.Cog):
             await ctx.message.channel.send(embed=ListEmbed)
         except:
             await ctx.send('Nothing in queue.')
-    
+
     @commands.Cog.listener()
     async def on_ready(self):
         global nextinqueueactive

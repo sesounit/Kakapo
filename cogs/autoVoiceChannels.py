@@ -43,8 +43,7 @@ class autoVoiceChannels(commands.Cog):
                         membercount = (membercount + 1)
                     await channelName.edit(user_limit=membercount)
             except:
-                #Don't question this.
-                print('')
+                pass
         try:
             if member.voice.channel.id == 694641754686881883:
                 global channelnumber
@@ -71,17 +70,19 @@ class autoVoiceChannels(commands.Cog):
                         await newChannel.move(beginning=True, reason="Automatic")
                         await member.move_to(newChannel)
         except:
-            print('')
-        if '#' in before.channel.name:
-            channelName = nextcord.utils.get(member.guild.voice_channels, name=before.channel.name)
-            members = channelName.members
-            membercount = 0
-            for member in members:
-                membercount = (membercount + 1)
-            if membercount == 0:
-                print("Cleaner about to be activated.")
-                await self.cleaner.start(member)
-
+            pass
+        try:
+            if '#' in before.channel.name:
+                channelName = nextcord.utils.get(member.guild.voice_channels, name=before.channel.name)
+                members = channelName.members
+                membercount = 0
+                for member in members:
+                    membercount = (membercount + 1)
+                if membercount == 0:
+                    print("Cleaner about to be activated.")
+                    await self.cleaner.start(member)
+        except:
+            pass
     @commands.command()
     async def destroy(self, ctx, *, channelName):
         if ctx.message.author.id == 267469338557153300:
