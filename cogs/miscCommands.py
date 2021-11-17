@@ -1,4 +1,4 @@
-import nextcord, requests
+import nextcord
 from nextcord.ext import commands
 import random
 class miscCommands(commands.Cog):
