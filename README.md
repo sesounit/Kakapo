@@ -9,10 +9,9 @@ Discord bot for the SESO discord
 ## Features
 - Posts to the subreddit r/FindaUnit
 - Provides moderation commands for admins
-- Welcome message
-- Supports YouTube video to audio streaming
-- Applies a Tenor Gif Filter to all channels
-- Provides help commands for information as well as other usefull stuff
+- Sends a welcome message to new users
+- Supports YouTube video to audio/music streaming
+- Applies a Tenor Gif Filter
 - Provides miscellaneous commands for the users
 - Supports the option to send a Reaction Roles message.
 - Shiba...
@@ -140,28 +139,36 @@ Simple calculator
 Rolls a die
 
 ## Installation
-To install it, your system needs the following dependencies on your project.
+To install it, your system needs the following dependencies on your project. Most of them can be installed with `pip` or the Python package manager of choice. The exception is `ffmpeg` which must be installed on your host as the Python package for ffmpeg is too old.
 
 ### Dependencies
-- `youtube-dl`
+- Python 3.8
 - `ffmpeg`
 - `nextcord`
 - `dotenv`
 - `datetime`
-- `nacl`
 - `youtube-search-python`
-- `typing`
-- `emojis`
+- `yt-dlp`
+
+### Setup
+Clone the project into a folder of your choice, enter it. In Unix it would be:
+
+```shell
+user@hostname:~ $ git clone https://github.com/Uncle-Sagbag/Kakapo.git
+user@hostname:~ $ cd Kakapo
+```
 
 ### Tokens
-Tokens are sourced from `.env`. Create `.env` in the project folder with the following content:
+Tokens are sourced from `.env`. Create `.env` in the project folder.
 
-#### Discord Token
+```shell
+user@hostname:~ $ nano .env
+```
+
+Paste the following tokens into your .env file. Feel free to change "example" to something else. Make sure you keep the quotation marks.
+
 ```
 discord_token = "example"
-```
-#### Reddit Tokens
-```
 user_agent = "example"
 client_id = "example"
 client_secret = "example"
@@ -169,3 +176,17 @@ redirect_uri = "example"
 username = "example"
 password = "example"
 ```
+
+Press `CTRL+X` then `Y` to save the file.
+
+### Execution
+Running the bot is as simple as `python3 bot.py` inside the project folder. If that fails, make sure the tokens in .env are correct. If you want the bot to run in the background, install a package like `screen` or `termux` so there can be a terminal running in the background. Refer to those packages on how to set it up.
+
+If you wish to post to FindAUnit, edit the `SESO.py` file to include your own recruitment message then run `python3 SESO.py`. To schedule this action, use crontab.
+
+```shell
+user@hostname:~ crontab -e
+30 15 * * 1,3,5 /usr/bin/python3 /path/to/Kakapo/SESO.py >/dev/null 2>&1
+```
+
+This will run `python3 SESO.py` Monday, Wednesday, and Friday at 2:30 PM every day. Look into crontab editing if you wish to customize the timing. I use https://crontab-generator.org/ because I'm lazy :D

@@ -1,4 +1,4 @@
-import nextcord, requests, aiohttp
+import aiohttp
 from nextcord.ext import commands
 
 class shiba(commands.Cog):

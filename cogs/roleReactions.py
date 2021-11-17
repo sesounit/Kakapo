@@ -1,11 +1,9 @@
 import nextcord
-import typing
-import emojis
 from nextcord.ext import commands, tasks
 from dotenv import load_dotenv
 
 load_dotenv()
-msg_id = 0
+msg_id = 897877718065098833
 msg = []
 
 class reactForRoles(commands.Cog):

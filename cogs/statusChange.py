@@ -1,8 +1,7 @@
-import nextcord, requests
-from itertools import cycle
+import nextcord, random
 from nextcord.ext import commands, tasks
 from nextcord.ext import commands
-status = cycle(['Arma 3', 'Minecraft', 'Left 4 Dead 2', 'Jackbox Party Pack', 'Among Us', 'Phasmophobia', 'Joe Rogan', 'Garry\'s Mod', 'Barotrauma', 'METAL GEAR SOLID V: THE PHANTOM PAIN', 'CS:GO'])
+status = ['Arma 3', 'Minecraft', 'Left 4 Dead 2', 'Jackbox Party Pack', 'Metal Gear Solid V', 'Phasmophobia', 'Counter-Strike: Global Offensive', 'Garry\'s Mod', 'Barotrauma']
 
 class statusChange(commands.Cog):
     def __init__(self, client):
@@ -11,7 +10,7 @@ class statusChange(commands.Cog):
     #Status Changin'
     @tasks.loop(hours=2)
     async def change_status(self):
-        await self.client.change_presence(activity=nextcord.Game(next(status)))
+        await self.client.change_presence(activity=nextcord.Game(random.choice(status)))
 
     @commands.Cog.listener()
     async def on_ready(self):

@@ -1,7 +1,6 @@
 # bot.py
 import nextcord, os, sys, random, logging
 from dotenv import load_dotenv
-import nacl
 from nextcord.ext import commands, tasks
 intents = nextcord.Intents.default()
 intents.members = True
