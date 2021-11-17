@@ -2,7 +2,7 @@ import nextcord, requests
 from itertools import cycle
 from nextcord.ext import commands, tasks
 from nextcord.ext import commands
-status = cycle(['Arma 3', 'Minecraft', 'Left 4 Dead 2', 'Jackbox Party Pack', 'Among Us', 'Phasmophobia', 'Joe Rogan', 'Garry\'s Mod', 'Steel Division 2'])
+status = cycle(['Arma 3', 'Minecraft', 'Left 4 Dead 2', 'Jackbox Party Pack', 'Among Us', 'Phasmophobia', 'Joe Rogan', 'Garry\'s Mod', 'Barotrauma', 'METAL GEAR SOLID V: THE PHANTOM PAIN', 'CS:GO'])
 
 class statusChange(commands.Cog):
     def __init__(self, client):
