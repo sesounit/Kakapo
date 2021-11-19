@@ -70,13 +70,4 @@ for filename in os.listdir('./cogs'):
             except:
                 print(f"WARNING: Failed to load cogs.{filename[:-3]}")
 
-#Kill Bot
-@client.command()
-async def kill(ctx):
-    if developer_only(ctx):
-        await ctx.send('Bot Terminated')
-        sys.exit()
-    else:
-        await ctx.send('You do not have the authority to kill the bot.')
-
 client.run(os.getenv("discord_token"))
