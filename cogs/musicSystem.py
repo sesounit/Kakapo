@@ -77,7 +77,7 @@ class musicSystem(commands.Cog):
         global nextinqueueactive
         nextinqueueactive = True
         await self.nextinqueue.start()
-    #This has some debugging phrases that print to the console. Not really necessary anymore, but would be helpful if something were to go wrong.
+    #Handles Queue
     @tasks.loop(seconds=5)
     async def nextinqueue(self):
         global ydl_opts
@@ -99,7 +99,7 @@ class musicSystem(commands.Cog):
         if voice != None:
             if voice.is_playing != True:
                 await self.timeout.start()
-
+    #Supposed to be called when nextinqueue discovers nothing is playing, is never called.
     @tasks.loop(minutes=25)
     async def timeout(self):
         voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
@@ -239,7 +239,7 @@ class musicSystem(commands.Cog):
         for item in backlog:
             if i > 0:
                 backlog.remove(item)
-                backlogtitle.remove(backlog[i])
+                backlogtitle.remove(backlog[2])
             i = i + 1
         await ctx.send('Queue cleared.')
 
