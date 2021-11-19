@@ -3,11 +3,8 @@
     <img src = "readme-media/logo.png">
 </p>
 
-# Kakapo Red
-Discord bot for the SESO discord, use only in development.
-
-## Disclaimer
-Use Kakapo red only for development. Push all commits to this branch only.
+# Kakapo
+Discord bot for the SESO discord
 
 ## Features
 - Posts to the subreddit r/FindaUnit
