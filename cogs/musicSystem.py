@@ -133,8 +133,11 @@ class musicSystem(commands.Cog):
                     voice.stop()
                     backlog2 = []
                     backlogtitle2 = []
-                    backlog2.append(backlog[1])
-                    backlogtitle2.append(backlogtitle[1])
+                    try:
+                        backlog2.append(backlog[1])
+                        backlogtitle2.append(backlogtitle[1])
+                    except:
+                        pass
                     backlog = backlog2
                     backlogtitle = backlogtitle2
                     await voice.disconnect()
@@ -215,7 +218,7 @@ class musicSystem(commands.Cog):
         except:
             await ctx.send("There is nothing in the queue.")
 
-    @commands.command(aliases=['gtfo', 'exit', 'stop'])
+    @commands.command(aliases=['gtfo', 'exit', 'stop', 'disconnect', 'dc'])
     async def leave(self, ctx):
         global backlog
         global backlogtitle
@@ -224,8 +227,11 @@ class musicSystem(commands.Cog):
             voice.stop
             backlog2 = []
             backlogtitle2 = []
-            backlog2.append(backlog[1])
-            backlogtitle2.append(backlogtitle[1])
+            try:
+                backlog2.append(backlog[1])
+                backlogtitle2.append(backlogtitle[1])
+            except:
+                pass
             backlog = backlog2
             backlogtitle = backlogtitle2
             await voice.disconnect()
