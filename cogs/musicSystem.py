@@ -34,7 +34,7 @@ class musicSystem(commands.Cog):
         self.client = client
     nextinqueueactive = False
     voicestopped = False
-    @commands.command(aliases=['np'])
+    @commands.command(aliases=['np', 'now'])
     async def nowPlaying(self, ctx, url=None, title=None):
         #The Formatting here hyperlinks the URL to the title.
         if url == None:
@@ -134,7 +134,7 @@ class musicSystem(commands.Cog):
                     backlog2 = []
                     backlogtitle2 = []
                     backlog2.append(backlog[1])
-                    backlogtitle2.append(backlogtitle2[1])
+                    backlogtitle2.append(backlogtitle[1])
                     backlog = backlog2
                     backlogtitle = backlogtitle2
                     await voice.disconnect()
@@ -215,10 +215,19 @@ class musicSystem(commands.Cog):
         except:
             await ctx.send("There is nothing in the queue.")
 
-    @commands.command(aliases=['gtfo', 'exit'])
+    @commands.command(aliases=['gtfo', 'exit', 'stop'])
     async def leave(self, ctx):
+        global backlog
+        global backlogtitle
         voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_connected():
+            voice.stop
+            backlog2 = []
+            backlogtitle2 = []
+            backlog2.append(backlog[1])
+            backlogtitle2.append(backlogtitle[1])
+            backlog = backlog2
+            backlogtitle = backlogtitle2
             await voice.disconnect()
         else:
             await ctx.send('The bot is not connected to a voice channel.')
@@ -238,17 +247,6 @@ class musicSystem(commands.Cog):
             voice.resume()
         else:
             ctx.send('Audio is not paused.')
-
-    @commands.command()
-    async def stop(self, ctx):
-        global backlog
-        global backlogtitle
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        voice.stop()
-        global voicestopped
-        voicestopped = True
-        backlog.remove(backlog[0])
-        backlogtitle.remove(backlogtitle[0])
 
     @commands.command(aliases=["Q"])
     async def queue(self, ctx):
