@@ -34,18 +34,21 @@ class musicSystem(commands.Cog):
         self.client = client
     nextinqueueactive = False
     voicestopped = False
-    @commands.command(aliases=['np'])
+    @commands.command(aliases=['np', 'now'])
     async def nowPlaying(self, ctx, url=None, title=None):
         #The Formatting here hyperlinks the URL to the title.
         if url == None:
-            try:
-                ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{backlogtitle[1]}]({backlog[1]})", color=0x0000ff)
-                ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                await ctx.message.channel.send(embed=ListEmbed)
-            except:
-                ListEmbed = nextcord.Embed(title="Now Playing:", description="Nothing", color=0x0000ff)
-                ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                await ctx.message.channel.send(embed=ListEmbed)
+            if voicestopped == False:
+                try:
+                    ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{backlogtitle[1]}]({backlog[1]})", color=0x0000ff)
+                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+                    await ctx.message.channel.send(embed=ListEmbed)
+                except:
+                    ListEmbed = nextcord.Embed(title="Now Playing:", description="Nothing", color=0x0000ff)
+                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+                    await ctx.message.channel.send(embed=ListEmbed)
+            else:
+                await ctx.send("No music is currently playing.")
         else:
             ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{title}]({url})", color=0x0000ff)
             ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
@@ -80,35 +83,66 @@ class musicSystem(commands.Cog):
     #Handles Queue
     @tasks.loop(seconds=5)
     async def nextinqueue(self):
-        global ydl_opts
-        global guild2
         global backlog
         global backlogtitle
         global voicestopped
+        global guild2
         voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
         if voicestopped == False:
-            if voice != None and not voice.is_playing():
+            if voice != None and voice.is_playing() != True:
                 try:
                     video_link = backlog[2]
-                    URL = musicExtras.extract(video_link)
-                    voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-                    backlog.remove(backlog[0])
-                    backlog.remove(backlogtitle[0])
+                    URL, title = musicExtras.extract(video_link)
+                    try:
+                        voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+                        backlog.remove(backlog[0])
+                        backlogtitle.remove(backlogtitle[0])
+                    except:
+                        pass
+                    
+                except:
+                    try:
+                        if voice.is_playing() != True:
+                            t = backlog[1]
+                            backlog.remove(backlog[0])
+                            backlogtitle.remove(backlogtitle[0])
+                    except:
+                        pass
+        #if voice != None:
+            #if voice.is_playing != True:
+                #await self.timeout.start()
+    #Supposed to be called when nextinqueue discovers nothing is playing, is never called.
+    #@tasks.loop(minutes=25)
+    #async def timeout(self):
+        #voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
+
+        #if voice.is_playing == True:
+            #await self.timeout.stop()
+
+        #elif voice.is_connected == True:
+            #await voice.disconnect
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        global backlog
+        global backlogtitle
+        if not member.bot and after.channel is None:
+            if not [m for m in before.channel.members if not m.bot]:
+                try:
+                    voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
+                    voice.stop()
+                    backlog2 = []
+                    backlogtitle2 = []
+                    try:
+                        backlog2.append(backlog[1])
+                        backlogtitle2.append(backlogtitle[1])
+                    except:
+                        pass
+                    backlog = backlog2
+                    backlogtitle = backlogtitle2
+                    await voice.disconnect()
                 except:
                     pass
-        if voice != None:
-            if voice.is_playing != True:
-                await self.timeout.start()
-    #Supposed to be called when nextinqueue discovers nothing is playing, is never called.
-    @tasks.loop(minutes=25)
-    async def timeout(self):
-        voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
-
-        if voice.is_playing == True:
-            await self.timeout.stop()
-
-        elif voice.is_connected == True:
-            await voice.disconnect
 
     #Looks weird, probably could be cleaner, but works this way.
     #Also don't touch this part without telling me, it'll probably break if you so much as breathe on it.
@@ -184,10 +218,22 @@ class musicSystem(commands.Cog):
         except:
             await ctx.send("There is nothing in the queue.")
 
-    @commands.command(aliases=['gtfo', 'exit'])
+    @commands.command(aliases=['gtfo', 'exit', 'stop', 'disconnect', 'dc'])
     async def leave(self, ctx):
+        global backlog
+        global backlogtitle
         voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_connected():
+            voice.stop
+            backlog2 = []
+            backlogtitle2 = []
+            try:
+                backlog2.append(backlog[1])
+                backlogtitle2.append(backlogtitle[1])
+            except:
+                pass
+            backlog = backlog2
+            backlogtitle = backlogtitle2
             await voice.disconnect()
         else:
             await ctx.send('The bot is not connected to a voice channel.')
@@ -208,17 +254,6 @@ class musicSystem(commands.Cog):
         else:
             ctx.send('Audio is not paused.')
 
-    @commands.command()
-    async def stop(self, ctx):
-        global backlog
-        global backlogtitle
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        voice.stop()
-        global voicestopped
-        voicestopped = True
-        backlog.remove(backlog[0])
-        backlogtitle.remove(backlogtitle[0])
-
     @commands.command(aliases=["Q"])
     async def queue(self, ctx):
         global backlog
@@ -235,13 +270,15 @@ class musicSystem(commands.Cog):
     @commands.command(aliases=['clear'])
     async def empty(self, ctx):
         global backlog
-        i = 0
-        for item in backlog:
-            if i > 0:
-                backlog.remove(item)
-                backlogtitle.remove(backlog[2])
-            i = i + 1
-        await ctx.send('Queue cleared.')
-
+        global backlogtitle
+        backlog2 = []
+        backlogtitle2 = []
+        backlog2.append(backlog[0])
+        backlog2.append(backlog[1])
+        backlogtitle2.append(backlogtitle[0])
+        backlogtitle2.append(backlogtitle[1])
+        backlog = backlog2
+        backlogtitle = backlogtitle2
+        await ctx.send("Queue Cleared!")
 def setup(client):
     client.add_cog(musicSystem(client))

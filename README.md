@@ -145,8 +145,8 @@ To install it, your system needs the following dependencies on your project. Mos
 - Python 3.8
 - `ffmpeg`
 - `nextcord`
-- `dotenv`
-- `datetime`
+- `PyNaCl`
+- `python-dotenv`
 - `youtube-search-python`
 - `yt-dlp`
 

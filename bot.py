@@ -1,5 +1,5 @@
 # bot.py
-import nextcord, os, sys, random, logging
+import nextcord, os, logging
 from dotenv import load_dotenv
 from nextcord.ext import commands, tasks
 intents = nextcord.Intents.default()
@@ -15,7 +15,7 @@ def developer_only(ctx):
     else:
         False
 ## Logging
-logging.basicConfig(level=logging.INFO)
+## logging.basicConfig(level=logging.INFO)
 
 # bot commands have prefix ! so all messages start with ! will trigger the bot commands
 client = commands.Bot(command_prefix='!', intents=intents, help_command = None, case_insensitive=True)
