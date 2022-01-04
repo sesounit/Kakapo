@@ -137,7 +137,8 @@ class musicSystem(commands.Cog):
                         backlog2.append(backlog[1])
                         backlogtitle2.append(backlogtitle[1])
                     except:
-                        pass
+                        backlog2 = ['Nada']
+                        backlogtitle2 = ['Nada']
                     backlog = backlog2
                     backlogtitle = backlogtitle2
                     await voice.disconnect()
