@@ -176,7 +176,7 @@ class musicSystem(commands.Cog):
             if voice != None:
                 if voice.is_playing():
                     URL, title = musicExtras.extract(video_link)
-                    ListEmbed = nextcord.Embed(title="Added to Queue", description=f"[{title}]({URL})", color=0x0000ff)
+                    ListEmbed = nextcord.Embed(title="Added to Queue", description=f"[{title}]({video_link})", color=0x0000ff)
                     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
                     backlog.append(video_link)
                     backlogtitle.append(title)
