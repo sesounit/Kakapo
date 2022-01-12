@@ -53,7 +53,7 @@ class musicSystem(commands.Cog):
         InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Hey developer, got that info for'ya!", color=0x0000ff)
         InfoEmbed.add_field(name="Backlog", value=backlog)
         InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
-        InfoEmbed.add_field(name="BacklogURL", value=backlog)
+        InfoEmbed.add_field(name="BacklogURL", value=backlogURL)
         InfoEmbed.set_footer(text="Music Functionality developed by Pickle423#0408, harrass him with problems.")
         await user.send(embed=InfoEmbed)
 
