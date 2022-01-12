@@ -8,10 +8,19 @@ from youtubesearchpython.__future__ import *
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 backlog = ['Nada']
 backlogtitle = ['Nada']
+backlogURL = ['NULL']
 nextinqueueactive = False
 voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio'}
+
+#Developer :)))))))
+def developer_only(ctx):
+    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
+        return True
+    else:
+        False
+
 
 #Player Extras
 class musicExtras():
@@ -34,6 +43,20 @@ class musicSystem(commands.Cog):
         self.client = client
     nextinqueueactive = False
     voicestopped = False
+
+    @commands.command(aliases=['info', 'information'])
+    async def check(self, ctx):
+        if developer_only:
+            user = ctx.author
+        else:
+            return
+        InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Hey developer, got that info for'ya!", color=0x0000ff)
+        InfoEmbed.add_field(name="Backlog", value=backlog)
+        InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
+        InfoEmbed.add_field(name="BacklogURL", value=backlog)
+        InfoEmbed.set_footer(text="Music Functionality developed by Pickle423#0408, harrass him with problems.")
+        await user.send(embed=InfoEmbed)
+
     @commands.command(aliases=['np', 'now'])
     async def nowPlaying(self, ctx, url=None, title=None):
         #The Formatting here hyperlinks the URL to the title.
@@ -85,6 +108,7 @@ class musicSystem(commands.Cog):
     async def nextinqueue(self):
         global backlog
         global backlogtitle
+        global backlogURL
         global voicestopped
         global guild2
         voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
@@ -92,11 +116,12 @@ class musicSystem(commands.Cog):
             if voice != None and voice.is_playing() != True:
                 try:
                     video_link = backlog[2]
-                    URL, title = musicExtras.extract(video_link)
+                    URL = backlogURL[1]
                     try:
                         voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                         backlog.remove(backlog[0])
                         backlogtitle.remove(backlogtitle[0])
+                        backlogURL.remove(backlogURL[0])
                     except:
                         pass
                     
@@ -106,6 +131,10 @@ class musicSystem(commands.Cog):
                             t = backlog[1]
                             backlog.remove(backlog[0])
                             backlogtitle.remove(backlogtitle[0])
+                            try:
+                                backlogURL.remove(backlogURL[0])
+                            except:
+                                pass
                     except:
                         pass
         #if voice != None:
@@ -126,6 +155,7 @@ class musicSystem(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         global backlog
         global backlogtitle
+        global backlogURL
         if not member.bot and after.channel is None:
             if not [m for m in before.channel.members if not m.bot]:
                 try:
@@ -141,6 +171,7 @@ class musicSystem(commands.Cog):
                         backlogtitle2 = ['Nada']
                     backlog = backlog2
                     backlogtitle = backlogtitle2
+                    backlogURL = ['NULL']
                     await voice.disconnect()
                 except:
                     pass
@@ -159,6 +190,7 @@ class musicSystem(commands.Cog):
         global ydl_opts
         global backlog
         global backlogtitle
+        global backlogURL
         global guild2
         global voicestopped
         voicestopped = False
@@ -180,6 +212,7 @@ class musicSystem(commands.Cog):
                     ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
                     backlog.append(video_link)
                     backlogtitle.append(title)
+                    backlogURL.append(URL)
                     await ctx.message.channel.send(embed=ListEmbed)
 
                 else:
@@ -206,6 +239,7 @@ class musicSystem(commands.Cog):
             global ydl_opts
             global backlog
             global backlogtitle
+            global backlogURL
             voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
             if voice.is_playing():
                 voice.stop()
@@ -214,6 +248,7 @@ class musicSystem(commands.Cog):
             voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
             backlog.remove(backlog[0])
             backlogtitle.remove(backlogtitle[0])
+            backlogURL.remove(backlogURL[0])
             voicestopped = False
             await ctx.invoke(self.client.get_command('nowPlaying'), url=videolink, title=title)
         except:
@@ -223,6 +258,7 @@ class musicSystem(commands.Cog):
     async def leave(self, ctx):
         global backlog
         global backlogtitle
+        global backlogURL
         voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
         if voice.is_connected():
             voice.stop
@@ -235,6 +271,7 @@ class musicSystem(commands.Cog):
                 pass
             backlog = backlog2
             backlogtitle = backlogtitle2
+            backlogURL = ['NULL']
             await voice.disconnect()
         else:
             await ctx.send('The bot is not connected to a voice channel.')
@@ -272,6 +309,7 @@ class musicSystem(commands.Cog):
     async def empty(self, ctx):
         global backlog
         global backlogtitle
+        global backlogURL
         backlog2 = []
         backlogtitle2 = []
         backlog2.append(backlog[0])
@@ -280,6 +318,7 @@ class musicSystem(commands.Cog):
         backlogtitle2.append(backlogtitle[1])
         backlog = backlog2
         backlogtitle = backlogtitle2
+        backlogURL = ['NULL']
         await ctx.send("Queue Cleared!")
 def setup(client):
     client.add_cog(musicSystem(client))
