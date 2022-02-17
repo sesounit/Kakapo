@@ -14,14 +14,6 @@ voicestopped = False
 guild2 = 'Null'
 ydl_opts = {'format': 'bestaudio'}
 
-#Developer :)))))))
-def developer_only(ctx):
-    if ctx.message.author.id == 267469338557153300 or ctx.message.author.id == 68019210814500864 or ctx.message.author.id == 337739057545347072:
-        return True
-    else:
-        False
-
-
 #Player Extras
 class musicExtras():
     def findsongtitle(url):
@@ -46,10 +38,7 @@ class musicSystem(commands.Cog):
 
     @commands.command(aliases=['info', 'information'])
     async def check(self, ctx):
-        if developer_only:
-            user = ctx.author
-        else:
-            return
+        user = ctx.author
         InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Hey developer, got that info for'ya!", color=0x0000ff)
         InfoEmbed.add_field(name="Backlog", value=backlog)
         InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
