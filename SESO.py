@@ -13,11 +13,41 @@ reddit = praw.Reddit(user_agent= os.getenv("user_agent"),
 print(reddit.user.me())
 
 
+s = """
+**See our website for screenshots, briefings, wiki, merchandise, and more.**
+https://www.sesounit.org/
 
-s = """#Media
+***
+# Schedule
+We focus on on EST (Eastern United States) timezone. We have players from PST, MST, CST, EST, BST, CEST, and MSK.
+
+Operation | Saturday | Sunday
+:--|:--|:--
+Operation Angola | 1800 EST |
+Operation Osiris | TBA | TBA
+
+***
+# S.E.S.O.
+SESO was established in 2018 with a focus on variety and story. We design 3-month long operations that are fun to play, easy to join, and contribute to the [SESO canon](https://wiki.sesounit.org/canon:list). We like to create The casual playstyle is tailored to allow one to join an operation as soon as possible. There is no required experience, minimum age, or test.
+
+## Rankless Structure
+
+We do not hold any ranks, in-game or out. Our structure allows anyone choose any role they wish, whether it be squad leader, sniper, UAV operator, etc. as long one fulfills their role. Players do not have to commit to a particular role and are open to switch roles every week.
+
+## Canon
+
+Operations set in the S.E.S.O. canon that span 90+ years. This means our operations can be set in any time period and setting, granting enormous variety. We have operated during the invasion of Czechoslovakia ([Sudeten Crisis, 1938](https://www.sesounit.org/timeline/operation-sudeten-crisis/)), the Vietnam War ([Operation Burning Buddhist, 1965](https://www.sesounit.org/timeline/operation-burning-buddhist/)), the Chernobyl Exclusion Zone ([Operation Green Diamond, 1988](https://www.sesounit.org/timeline/operation-green-diamond/)), and the Donbass War ([Crimean Crisis, 2014](https://www.sesounit.org/timeline/operation-crimean-crisis/)). We also operate in fictional settings that are based off historical events such as a Yugoslavian civil war set on Fapovo Islands ([Operation Openhouse, 1992](https://www.sesounit.org/timeline/operation-openhouse/)), and a southern African civil war on Isla Duala ([Isla Duala Civil War, 2000](https://www.sesounit.org/timeline/operation-isla-duala/)).
+
+## Active Community
+
+We play Arma 3 scenarios and other games every night. If you are looking for a community of friends, we are always welcoming.
+
+***
+
+#Media
 All media is linked and provided on the [S.E.S.O. Youtube Channel](https://www.youtube.com/channel/UC5iMX4ubNxfiFaG2fbAOKOg/featured)
 
-The following is a selection of recommended S.E.S.O. videos:
+##Recommended S.E.S.O. videos:
 
 [Operation Green Diamond | 5th Engagement](https://youtu.be/yiBY-arKDqI), full engagement footage from an operation set in the Chernobyl Exclusion Zone.
 
@@ -27,64 +57,21 @@ The following is a selection of recommended S.E.S.O. videos:
 
 [Operation Trebuchet | Side Campaign](https://www.youtube.com/watch?v=fLH6BiG3RD8), a collage from our Operation Trebuchet campaign set in the Halo universe.
 
-[Operation Perun | Final Engagement](https://youtu.be/wnNviA-t7UU), a unit-favorite. A 3 month operation that ended with an explosive engagement.
+[Operation Perun | Final Engagement](https://youtu.be/wnNviA-t7UU), a personal favorite. A 3 month operation that ended with an explosive engagement.
 
 [SESO Arma funny moments | Compilation of Silliness](https://youtu.be/sqokKzQn9vc). A perfect example of our casual attitude.
 
 ***
-# Schedule
-We operate in the EST timezone. However, we are open to all timezones, especially European and Pacific.
-
-Operation | Saturday | Sunday
-:--|:--|:--
-S.E.S.O. Operation | 1800 EST | 1800 EST
-
-***
-# What we offer
-## Casual MilSim Atmosphere
-
-We focus on having fun first, being tactical later. This means many of our addons and structure are configured for maximum enjoyment with the the least drag.
-
-## Low expectations
-
-No experience, no test, no minimum age, no microphone needed, no single-clanning requirement. Just have Arma 3 and a desire for cooperation.
-
-## Rankless structure
-
-We do not hold any ranks in the unit, in-game or outside. Yet, we still hold a structure. Anyone is permissible to choose any role they wish, whether it be squad leader, sniper, pilot, etc. as long as most of the group agrees with the role selection. Usually, the group is fine with anyone's selection and the structure works harmoniously.
-
-## S.E.S.O. Storyline Operations
-
-Operations set in the S.E.S.O. canon are part of a storyline that spans several campaigns. This means our operations can be set in any time period and setting. We have operated during the invasion of Czechoslovakia (Sudeten Crisis, 1938), the Vietnam War (Operation Burning Buddhist, 1965), the Chernobyl Exclusion Zone (Operation Green Diamond, 1988), and the Donbass War (Operation Black Bear, 2014). We also operate in fictional settings that are based off historical events such as a Yugoslavian civil war set on Fapovo Islands (Operation Openhouse, 1992), and a Southern African civil war on Isla Duala (Isla Duala Civil War, 2000).
-
-## 24/7 Scenarios Server
-
-Our dedicated server machine runs community-made scenarios on rotation, always available to play any time. This is perfect for individuals who cannot make it to the operations but wish to spend time with S.E.S.O. It is also good for any people who just want more Arma 3 in their lives. The current scenarios we play are Antistasi (with RHS mods), Manhunt, and Dynamic Recon Ops. Feel free to suggest more workshop missions.
-
-## Side Engagements
-
-S.E.S.O. makes it easy for one to become a host of engagements/operations. Upon request and feedback from experienced Operation Hosts, one can quickly feature their custom-made missions to the unit. There is no strict test or experience necessary. With enough engagements under one's sleeve, one can even contribute to the S.E.S.O. storyline.
-
-## Active Lounge
-
-Every night, we gather in voice channels to play games. We are welcome for anyone to join in our multiplayer game sessions, developing mods, or just to chat.
-
-***
-# Background
-In 2018, we grew dissatisfied with the strict bureacracy associated with Arma MilSim units. It was difficult to get into an engaging operation fast and easily. Thus, S.E.S.O. was created. We are a tightly knit community bent on providing engaging experiences where friends can cooperate without the overhead of ranks and tests. Since then, we have garnered 15+ active players per operation and we hope to garner more. We will keep posting for recruitment until our soft-cap of 32 active players. We welcome you to join us for one operation or many.
-
-***
 
 # How to Join S.E.S.O.
+Follow the [New Operator Guide](https://wiki.sesounit.org/tutorials_guides:operator_guide) at our wiki.
 
-1. Join the discord at  https://discord.gg/AVE9Gvq97C
-2. Download the mods you want in #mod-list
-3. Join the Teamspeak Server using #teamspeak-info
-4. Join the game server using the same connection details from #teamspeak-info
+If you have any questions, please join us in our Discord:
+https://discord.gg/AVE9Gvq97C
 
 ***"""
 
 subreddit = reddit.subreddit('FindAUnit')
-subreddit.submit(
-	'S.E.S.O. PMC[US][Recruiting][Casual][A3]', 
+submission = subreddit.submit(
+	'[NA][Recruiting][Casual][A3] S.E.S.O. | Private Military Company', 
 	selftext=s,)
