@@ -55,9 +55,9 @@ class miscCommands(commands.Cog):
     async def version(self, context):
 
         mainEmbed = nextcord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-        mainEmbed.add_field(name="Changes:", value="Music System Overhaul")
-        mainEmbed.add_field(name="Version Code:", value="v0.9.7", inline=False)
-        mainEmbed.add_field(name="Date Released:", value="November 13th, 2021", inline=False)
+        mainEmbed.add_field(name="Changes:", value="Version 1 achieved, further music alterations and helper command cleanup.")
+        mainEmbed.add_field(name="Version Code:", value="v1.0.0", inline=False)
+        mainEmbed.add_field(name="Date Released:", value="February 17th, 2022", inline=False)
         mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Fletch#0617, Dildo Sagbag#8107.")
 
         await context.message.channel.send(embed=mainEmbed)
