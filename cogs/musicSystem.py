@@ -1,5 +1,4 @@
-import nextcord, os, sys, random
-import nacl
+import nextcord, os, sys, random, nacl
 from yt_dlp import YoutubeDL
 from nextcord.ext import commands, tasks
 from youtubesearchpython.__future__ import *
@@ -39,12 +38,20 @@ class musicSystem(commands.Cog):
     @commands.command(aliases=['info', 'information'])
     async def check(self, ctx):
         user = ctx.author
-        InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Hey developer, got that info for'ya!", color=0x0000ff)
+        InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Infodump Requested", color=0x0000ff)
         InfoEmbed.add_field(name="Backlog", value=backlog)
         InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
         InfoEmbed.add_field(name="BacklogURL", value=backlogURL)
         InfoEmbed.set_footer(text="Music Functionality developed by Pickle423#0408, harrass him with problems.")
-        await user.send(embed=InfoEmbed)
+        try:
+            await user.send(embed=InfoEmbed)
+        except:
+            InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Infodump Requested", color=0x0000ff)
+            InfoEmbed.add_field(name="Backlog", value=backlog)
+            InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
+            InfoEmbed.add_field(name="BacklogURL", value="Check failed, BacklogURL probably too large.")
+            InfoEmbed.set_footer(text="Music Functionality developed by Pickle423#0408, harrass him with problems.")
+            await user.send(embed=InfoEmbed)
 
     @commands.command(aliases=['np', 'now'])
     async def nowPlaying(self, ctx, url=None, title=None):
@@ -93,7 +100,7 @@ class musicSystem(commands.Cog):
         nextinqueueactive = True
         await self.nextinqueue.start()
     #Handles Queue
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=2)
     async def nextinqueue(self):
         global backlog
         global backlogtitle
@@ -104,8 +111,7 @@ class musicSystem(commands.Cog):
         if voicestopped == False:
             if voice != None and voice.is_playing() != True:
                 try:
-                    video_link = backlog[2]
-                    URL = backlogURL[1]
+                    URL = backlogURL[2]
                     try:
                         voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                         backlog.remove(backlog[0])
@@ -210,6 +216,7 @@ class musicSystem(commands.Cog):
                     voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                     backlog.append(video_link)
                     backlogtitle.append(title)
+                    backlogURL.append(URL)
                     await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
             else:
                 URL, title = musicExtras.extract(video_link)
@@ -218,6 +225,7 @@ class musicSystem(commands.Cog):
                 voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
                 backlog.append(video_link)
                 backlogtitle.append(title)
+                backlogURL.append(URL)
                 await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
         except:
             await ctx.send("A problem occured while trying to play.")
@@ -257,7 +265,8 @@ class musicSystem(commands.Cog):
                 backlog2.append(backlog[1])
                 backlogtitle2.append(backlogtitle[1])
             except:
-                pass
+                backlog2.append("Nothing")
+                backlogtitle2.append("Nothing")
             backlog = backlog2
             backlogtitle = backlogtitle2
             backlogURL = ['NULL']
