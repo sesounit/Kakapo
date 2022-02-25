@@ -1,313 +1,463 @@
-import nextcord, os, sys, random
-import nacl
+import nextcord, random, asyncio, itertools, sys, traceback
+from nextcord.ext import commands
+from async_timeout import timeout
+from functools import partial
+import yt_dlp
 from yt_dlp import YoutubeDL
-from nextcord.ext import commands, tasks
-from youtubesearchpython.__future__ import *
 
-#Music Related
-FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-backlog = ['Nada']
-backlogtitle = ['Nada']
-backlogURL = ['NULL']
-nextinqueueactive = False
-voicestopped = False
-guild2 = 'Null'
-ydl_opts = {'format': 'bestaudio'}
+# Suppress noise about console usage from errors
+yt_dlp.utils.bug_reports_message = lambda: ''
 
-#Player Extras
-class musicExtras():
-    def findsongtitle(url):
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            title = info['title']
-            return title
-    #Moving the extraction process to this class for some god damn reason made it go far faster.
-    def extract(url):
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            URL = info['formats'][0]['url']
-            title = info['title']
-        return URL, title
+ytdlopts = {
+    'format': 'bestaudio/best',
+    'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
+    'noplaylist': True,
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    'quiet': True,
+    'no_warnings': True,
+    'default_search': 'auto',
+    'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
+}
 
-#musicSystem Cog
-class musicSystem(commands.Cog):
-    def __init__(self, client):
-        self.client = client
-    nextinqueueactive = False
-    voicestopped = False
+ffmpegopts = {
+    'before_options': '-nostdin',
+    'options': '-vn'
+}
 
-    @commands.command(aliases=['info', 'information'])
-    async def check(self, ctx):
-        user = ctx.author
-        InfoEmbed = nextcord.Embed(title="Bot Check:", description=f"Hey developer, got that info for'ya!", color=0x0000ff)
-        InfoEmbed.add_field(name="Backlog", value=backlog)
-        InfoEmbed.add_field(name="Backlogtitle", value=backlogtitle)
-        InfoEmbed.add_field(name="BacklogURL", value=backlogURL)
-        InfoEmbed.set_footer(text="Music Functionality developed by Pickle423#0408, harrass him with problems.")
-        await user.send(embed=InfoEmbed)
+ytdl = YoutubeDL(ytdlopts)
 
-    @commands.command(aliases=['np', 'now'])
-    async def nowPlaying(self, ctx, url=None, title=None):
-        #The Formatting here hyperlinks the URL to the title.
-        if url == None:
-            if voicestopped == False:
-                try:
-                    ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{backlogtitle[1]}]({backlog[1]})", color=0x0000ff)
-                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                    await ctx.message.channel.send(embed=ListEmbed)
-                except:
-                    ListEmbed = nextcord.Embed(title="Now Playing:", description="Nothing", color=0x0000ff)
-                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                    await ctx.message.channel.send(embed=ListEmbed)
-            else:
-                await ctx.send("No music is currently playing.")
+
+class VoiceConnectionError(commands.CommandError):
+    """Custom Exception class for connection errors."""
+
+
+class InvalidVoiceChannel(VoiceConnectionError):
+    """Exception for cases of invalid Voice Channels."""
+
+
+class YTDLSource(nextcord.PCMVolumeTransformer):
+
+    def __init__(self, source, *, data, requester):
+        super().__init__(source)
+        self.requester = requester
+
+        self.title = data.get('title')
+        self.web_url = data.get('webpage_url')
+        self.duration = data.get('duration')
+
+        # YTDL info dicts (data) have other useful information you might want
+        # https://github.com/rg3/youtube-dl/blob/master/README.md
+
+    def __getitem__(self, item: str):
+        """Allows us to access attributes similar to a dict.
+        This is only useful when you are NOT downloading.
+        """
+        return self.__getattribute__(item)
+
+    @classmethod
+    async def create_source(cls, ctx, search: str, *, loop, download=False):
+        loop = loop or asyncio.get_event_loop()
+
+        to_run = partial(ytdl.extract_info, url=search, download=download)
+        data = await loop.run_in_executor(None, to_run)
+
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries'][0]
+
+        embed = nextcord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
+        await ctx.send(embed=embed)
+
+        if download:
+            source = ytdl.prepare_filename(data)
         else:
-            ListEmbed = nextcord.Embed(title="Now Playing:", description=f"[{title}]({url})", color=0x0000ff)
-            ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-            await ctx.message.channel.send(embed=ListEmbed)
+            return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
 
-    @commands.command(aliases=['lp', 'last'])
-    async def lastPlayed(self, ctx):
-        #Try-Except for if last played is 'nada'
-        try:
-            ListEmbed = nextcord.Embed(title="Last Played:", description=f"[{backlogtitle[0]}]({backlog[0]})", color=0x0000ff)
-            ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-            await ctx.message.channel.send(embed=ListEmbed)
-        except:
-            ListEmbed = nextcord.Embed(title="Last Played:", description=backlog[0], color=0x0000ff)
-            ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-            await ctx.message.channel.send(embed=ListEmbed)
+        return cls(nextcord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
 
-    @commands.command(aliases=['n'])
-    async def next(self, ctx):
-        try:
-            ListEmbed = nextcord.Embed(title="Next to be Played:", description=f"[{backlogtitle[2]}]({backlog[2]})", color=0x0000ff)
-            ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-            await ctx.message.channel.send(embed=ListEmbed)
-        except:
-            await ctx.send('Nothing in queue.')
+    @classmethod
+    async def regather_stream(cls, data, *, loop):
+        """Used for preparing a stream, instead of downloading.
+        Since Youtube Streaming links expire."""
+        loop = loop or asyncio.get_event_loop()
+        requester = data['requester']
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        global nextinqueueactive
-        nextinqueueactive = True
-        await self.nextinqueue.start()
-    #Handles Queue
-    @tasks.loop(seconds=5)
-    async def nextinqueue(self):
-        global backlog
-        global backlogtitle
-        global backlogURL
-        global voicestopped
-        global guild2
-        voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
-        if voicestopped == False:
-            if voice != None and voice.is_playing() != True:
-                try:
-                    video_link = backlog[2]
-                    URL = backlogURL[1]
-                    try:
-                        voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-                        backlog.remove(backlog[0])
-                        backlogtitle.remove(backlogtitle[0])
-                        backlogURL.remove(backlogURL[0])
-                    except:
-                        pass
-                    
-                except:
-                    try:
-                        if voice.is_playing() != True:
-                            t = backlog[1]
-                            backlog.remove(backlog[0])
-                            backlogtitle.remove(backlogtitle[0])
-                            try:
-                                backlogURL.remove(backlogURL[0])
-                            except:
-                                pass
-                    except:
-                        pass
-        #if voice != None:
-            #if voice.is_playing != True:
-                #await self.timeout.start()
-    #Supposed to be called when nextinqueue discovers nothing is playing, is never called.
-    #@tasks.loop(minutes=25)
-    #async def timeout(self):
-        #voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
+        to_run = partial(ytdl.extract_info, url=data['webpage_url'], download=False)
+        data = await loop.run_in_executor(None, to_run)
 
-        #if voice.is_playing == True:
-            #await self.timeout.stop()
+        return cls(nextcord.FFmpegPCMAudio(data['url']), data=data, requester=requester)
 
-        #elif voice.is_connected == True:
-            #await voice.disconnect
 
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        global backlog
-        global backlogtitle
-        global backlogURL
-        if not member.bot and after.channel is None:
-            if not [m for m in before.channel.members if not m.bot]:
-                try:
-                    voice = nextcord.utils.get(self.client.voice_clients, guild = guild2)
-                    voice.stop()
-                    backlog2 = []
-                    backlogtitle2 = []
-                    try:
-                        backlog2.append(backlog[1])
-                        backlogtitle2.append(backlogtitle[1])
-                    except:
-                        backlog2 = ['Nada']
-                        backlogtitle2 = ['Nada']
-                    backlog = backlog2
-                    backlogtitle = backlogtitle2
-                    backlogURL = ['NULL']
-                    await voice.disconnect()
-                except:
-                    pass
+class MusicPlayer:
+    """A class which is assigned to each guild using the bot for Music.
+    This class implements a queue and loop, which allows for different guilds to listen to different playlists
+    simultaneously.
+    When the bot disconnects from the Voice it's instance will be destroyed.
+    """
 
-    #Looks weird, probably could be cleaner, but works this way.
-    #Also don't touch this part without telling me, it'll probably break if you so much as breathe on it.
+    __slots__ = ('bot', '_guild', '_channel', '_cog', 'queue', 'next', 'current', 'np', 'volume')
 
-    @commands.command(aliases=['p'])
-    async def play(self, ctx, *, video_link : str):
-        global nextinqueueactive
-        if nextinqueueactive == False:
-            await ctx.send("Setup Function Called, retry request.")
-            nextinqueueactive = True
-            await self.nextinqueue.start()
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        global ydl_opts
-        global backlog
-        global backlogtitle
-        global backlogURL
-        global guild2
-        global voicestopped
-        voicestopped = False
-        guild2 = ctx.guild
-        voiceChannel = ctx.author.voice.channel
+    def __init__(self, ctx):
+        self.bot = ctx.bot
+        self._guild = ctx.guild
+        self._channel = ctx.channel
+        self._cog = ctx.cog
 
-        try:
-            if "https://" not in video_link:
-                videosSearch = VideosSearch(video_link, limit = 1)
-                videosResult = await videosSearch.next()
-                video_link = videosResult['result'][0]['link']
-        except:
-            await ctx.send("A problem occured while trying to search Youtube.")
-        try:
-            if voice != None:
-                if voice.is_playing():
-                    URL, title = musicExtras.extract(video_link)
-                    ListEmbed = nextcord.Embed(title="Added to Queue", description=f"[{title}]({video_link})", color=0x0000ff)
-                    ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-                    backlog.append(video_link)
-                    backlogtitle.append(title)
-                    backlogURL.append(URL)
-                    await ctx.message.channel.send(embed=ListEmbed)
+        self.queue = asyncio.Queue()
+        self.next = asyncio.Event()
 
-                else:
-                    voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-                    URL, title = musicExtras.extract(video_link)
-                    voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-                    backlog.append(video_link)
-                    backlogtitle.append(title)
-                    await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
-            else:
-                URL, title = musicExtras.extract(video_link)
-                await voiceChannel.connect()
-                voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-                voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-                backlog.append(video_link)
-                backlogtitle.append(title)
-                await ctx.invoke(self.client.get_command('nowPlaying'), url=video_link, title=title)
-        except:
-            await ctx.send("A problem occured while trying to play.")
-    @commands.command()
-    async def skip(self, ctx):
-        try:
-            global voicestopped
-            global ydl_opts
-            global backlog
-            global backlogtitle
-            global backlogURL
-            voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-            if voice.is_playing():
-                voice.stop()
-            videolink = backlog[2]
-            URL, title = musicExtras.extract(videolink)
-            voice.play(nextcord.FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
-            backlog.remove(backlog[0])
-            backlogtitle.remove(backlogtitle[0])
-            backlogURL.remove(backlogURL[0])
-            voicestopped = False
-            await ctx.invoke(self.client.get_command('nowPlaying'), url=videolink, title=title)
-        except:
-            await ctx.send("There is nothing in the queue.")
+        self.np = None  # Now playing message
+        self.volume = .5
+        self.current = None
 
-    @commands.command(aliases=['gtfo', 'exit', 'stop', 'disconnect', 'dc'])
-    async def leave(self, ctx):
-        global backlog
-        global backlogtitle
-        global backlogURL
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        if voice.is_connected():
-            voice.stop
-            backlog2 = []
-            backlogtitle2 = []
+        ctx.bot.loop.create_task(self.player_loop())
+
+    async def player_loop(self):
+        """Our main player loop."""
+        await self.bot.wait_until_ready()
+
+        while not self.bot.is_closed():
+            self.next.clear()
+
             try:
-                backlog2.append(backlog[1])
-                backlogtitle2.append(backlogtitle[1])
-            except:
+                # Wait for the next song. If we timeout cancel the player and disconnect...
+                async with timeout(300):  # 5 minutes...
+                    source = await self.queue.get()
+            except asyncio.TimeoutError:
+                return self.destroy(self._guild)
+
+            if not isinstance(source, YTDLSource):
+                # Source was probably a stream (not downloaded)
+                # So we should regather to prevent stream expiration
+                try:
+                    source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
+                except Exception as e:
+                    await self._channel.send(f'There was an error processing your song.\n'
+                                             f'```css\n[{e}]\n```')
+                    continue
+
+            source.volume = self.volume
+            self.current = source
+
+            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            embed = nextcord.Embed(title="Now playing", description=f"[{source.title}]({source.web_url}) [{source.requester.mention}]", color=nextcord.Color.green())
+            self.np = await self._channel.send(embed=embed)
+            await self.next.wait()
+
+            # Make sure the FFmpeg process is cleaned up.
+            source.cleanup()
+            self.current = None
+
+    def destroy(self, guild):
+        """Disconnect and cleanup the player."""
+        return self.bot.loop.create_task(self._cog.cleanup(guild))
+
+
+class Music(commands.Cog):
+    """Music related commands."""
+
+    __slots__ = ('bot', 'players')
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.players = {}
+
+    async def cleanup(self, guild):
+        try:
+            await guild.voice_client.disconnect()
+        except AttributeError:
+            pass
+
+        try:
+            del self.players[guild.id]
+        except KeyError:
+            pass
+
+    async def __local_check(self, ctx):
+        """A local check which applies to all commands in this cog."""
+        if not ctx.guild:
+            raise commands.NoPrivateMessage
+        return True
+
+    async def __error(self, ctx, error):
+        """A local error handler for all errors arising from commands in this cog."""
+        if isinstance(error, commands.NoPrivateMessage):
+            try:
+                return await ctx.send('This command can not be used in Private Messages.')
+            except nextcord.HTTPException:
                 pass
-            backlog = backlog2
-            backlogtitle = backlogtitle2
-            backlogURL = ['NULL']
-            await voice.disconnect()
+        elif isinstance(error, InvalidVoiceChannel):
+            await ctx.send('Error connecting to Voice Channel. '
+                           'Please make sure you are in a valid channel or provide me with one')
+
+        print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+    def get_player(self, ctx):
+        """Retrieve the guild player, or generate one."""
+        try:
+            player = self.players[ctx.guild.id]
+        except KeyError:
+            player = MusicPlayer(ctx)
+            self.players[ctx.guild.id] = player
+
+        return player
+
+    @commands.command(name='join', aliases=['connect', 'j'], description="connects to voice")
+    async def connect_(self, ctx, *, channel: nextcord.VoiceChannel=None):
+        """Connect to voice.
+        Parameters
+        ------------
+        channel: nextcord.VoiceChannel [Optional]
+            The channel to connect to. If a channel is not specified, an attempt to join the voice channel you are in
+            will be made.
+        This command also handles moving the bot to different channels.
+        """
+        if not channel:
+            try:
+                channel = ctx.author.voice.channel
+            except AttributeError:
+                embed = nextcord.Embed(title="", description="No channel to join. Please call `,join` from a voice channel.", color=nextcord.Color.green())
+                await ctx.send(embed=embed)
+                raise InvalidVoiceChannel('No channel to join. Please either specify a valid channel or join one.')
+
+        vc = ctx.voice_client
+
+        if vc:
+            if vc.channel.id == channel.id:
+                return
+            try:
+                await vc.move_to(channel)
+            except asyncio.TimeoutError:
+                raise VoiceConnectionError(f'Moving to channel: <{channel}> timed out.')
         else:
-            await ctx.send('The bot is not connected to a voice channel.')
+            try:
+                await channel.connect()
+            except asyncio.TimeoutError:
+                raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
+        if (random.randint(0, 1) == 0):
+            await ctx.message.add_reaction('👍')
+        await ctx.send(f'**Joined `{channel}`**')
 
-    @commands.command()
-    async def pause(self, ctx):
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        if voice.is_playing():
-            voice.pause()
+    @commands.command(name='play', aliases=['sing','p'], description="streams music")
+    async def play_(self, ctx, *, search: str):
+        """Request a song and add it to the queue.
+        This command attempts to join a valid voice channel if the bot is not already in one.
+        Uses YTDL to automatically search and retrieve a song.
+        Parameters
+        ------------
+        search: str [Required]
+            The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
+        """
+        await ctx.trigger_typing()
+
+        vc = ctx.voice_client
+
+        if not vc:
+            await ctx.invoke(self.connect_)
+
+        player = self.get_player(ctx)
+
+        # If download is False, source will be a dict which will be used later to regather the stream.
+        # If download is True, source will be a nextcord.FFmpegPCMAudio with a VolumeTransformer.
+        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+
+        await player.queue.put(source)
+
+    @commands.command(name='pause', description="pauses music")
+    async def pause_(self, ctx):
+        """Pause the currently playing song."""
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_playing():
+            embed = nextcord.Embed(title="", description="I am currently not playing anything", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+        elif vc.is_paused():
+            return
+
+        vc.pause()
+        await ctx.send("Paused ⏸️")
+
+    @commands.command(name='resume', description="resumes music")
+    async def resume_(self, ctx):
+        """Resume the currently paused song."""
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+        elif not vc.is_paused():
+            return
+
+        vc.resume()
+        await ctx.send("Resuming ⏯️")
+
+    @commands.command(name='skip', description="skips to next song in queue")
+    async def skip_(self, ctx):
+        """Skip the song."""
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        if vc.is_paused():
+            pass
+        elif not vc.is_playing():
+            return
+
+        vc.stop()
+    
+    @commands.command(name='remove', aliases=['rm', 'rem'], description="removes specified song from queue")
+    async def remove_(self, ctx, pos : int=None):
+        """Removes specified song from queue"""
+
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        player = self.get_player(ctx)
+        if pos == None:
+            player.queue._queue.pop()
         else:
-            ctx.send('No audio is playing currently.')
+            try:
+                s = player.queue._queue[pos-1]
+                del player.queue._queue[pos-1]
+                embed = nextcord.Embed(title="", description=f"Removed [{s['title']}]({s['webpage_url']}) [{s['requester'].mention}]", color=nextcord.Color.green())
+                await ctx.send(embed=embed)
+            except:
+                embed = nextcord.Embed(title="", description=f'Could not find a track for "{pos}"', color=nextcord.Color.green())
+                await ctx.send(embed=embed)
+    
+    @commands.command(name='clear', aliases=['clr', 'cl', 'cr'], description="clears entire queue")
+    async def clear_(self, ctx):
+        """Deletes entire queue of upcoming songs."""
 
-    @commands.command(aliases=['unpause'])
-    async def resume(self, ctx):
-        voice = nextcord.utils.get(self.client.voice_clients, guild = ctx.guild)
-        if voice.is_paused():
-            voice.resume()
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        player = self.get_player(ctx)
+        player.queue._queue.clear()
+        await ctx.send('💣 **Cleared**')
+
+    @commands.command(name='queue', aliases=['q', 'playlist', 'que'], description="shows the queue")
+    async def queue_info(self, ctx):
+        """Retrieve a basic queue of upcoming songs."""
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        player = self.get_player(ctx)
+        if player.queue.empty():
+            embed = nextcord.Embed(title="", description="queue is empty", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        seconds = vc.source.duration % (24 * 3600) 
+        hour = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        seconds %= 60
+        if hour > 0:
+            duration = "%dh %02dm %02ds" % (hour, minutes, seconds)
         else:
-            ctx.send('Audio is not paused.')
+            duration = "%02dm %02ds" % (minutes, seconds)
 
-    @commands.command(aliases=["Q"])
-    async def queue(self, ctx):
-        global backlog
-        count = 0
-        i = 0
-        for item in backlog:
-            if i > 1:
-                count = count + 1
-            i = i + 1
-        ListEmbed = nextcord.Embed(title="In Queue", description=f"{count} in Queue.", color=0x0000ff)
-        ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-        await ctx.message.channel.send(embed=ListEmbed)
+        # Grabs the songs in the queue...
+        upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
+        fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
+        fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
+        embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
 
-    @commands.command(aliases=['clear'])
-    async def empty(self, ctx):
-        global backlog
-        global backlogtitle
-        global backlogURL
-        backlog2 = []
-        backlogtitle2 = []
-        backlog2.append(backlog[0])
-        backlog2.append(backlog[1])
-        backlogtitle2.append(backlogtitle[0])
-        backlogtitle2.append(backlogtitle[1])
-        backlog = backlog2
-        backlogtitle = backlogtitle2
-        backlogURL = ['NULL']
-        await ctx.send("Queue Cleared!")
-def setup(client):
-    client.add_cog(musicSystem(client))
+        await ctx.send(embed=embed)
+
+    @commands.command(name='np', aliases=['song', 'current', 'currentsong', 'playing'], description="shows the current playing song")
+    async def now_playing_(self, ctx):
+        """Display information about the currently playing song."""
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        player = self.get_player(ctx)
+        if not player.current:
+            embed = nextcord.Embed(title="", description="I am currently not playing anything", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+        
+        seconds = vc.source.duration % (24 * 3600) 
+        hour = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        seconds %= 60
+        if hour > 0:
+            duration = "%dh %02dm %02ds" % (hour, minutes, seconds)
+        else:
+            duration = "%02dm %02ds" % (minutes, seconds)
+
+        embed = nextcord.Embed(title="", description=f"[{vc.source.title}]({vc.source.web_url}) [{vc.source.requester.mention}] | `{duration}`", color=nextcord.Color.green())
+        embed.set_author(icon_url=self.bot.user.avatar.url, name=f"Now Playing 🎶")
+        await ctx.send(embed=embed)
+
+    @commands.command(name='volume', aliases=['vol', 'v'], description="changes Kermit's volume")
+    async def change_volume(self, ctx, *, vol: float=None):
+        """Change the player volume.
+        Parameters
+        ------------
+        volume: float or int [Required]
+            The volume to set the player to in percentage. This must be between 1 and 100.
+        """
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I am not currently connected to voice", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+        
+        if not vol:
+            embed = nextcord.Embed(title="", description=f"🔊 **{(vc.source.volume)*100}%**", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        if not 0 < vol < 101:
+            embed = nextcord.Embed(title="", description="Please enter a value between 1 and 100", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        player = self.get_player(ctx)
+
+        if vc.source:
+            vc.source.volume = vol / 100
+
+        player.volume = vol / 100
+        embed = nextcord.Embed(title="", description=f'**`{ctx.author}`** set the volume to **{vol}%**', color=nextcord.Color.green())
+        await ctx.send(embed=embed)
+
+    @commands.command(name='leave', aliases=["stop", "dc", "disconnect", "bye"], description="stops music and disconnects from voice")
+    async def leave_(self, ctx):
+        """Stop the currently playing song and destroy the player.
+        !Warning!
+            This will destroy the player assigned to your guild, also deleting any queued songs and settings.
+        """
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = nextcord.Embed(title="", description="I'm not connected to a voice channel", color=nextcord.Color.green())
+            return await ctx.send(embed=embed)
+
+        if (random.randint(0, 1) == 0):
+            await ctx.message.add_reaction('👋')
+        await ctx.send('**Successfully disconnected**')
+
+        await self.cleanup(ctx.guild)
+
+
+def setup(bot):
+    bot.add_cog(Music(bot))
