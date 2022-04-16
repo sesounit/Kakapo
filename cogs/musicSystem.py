@@ -74,6 +74,13 @@ class YTDLSource(nextcord.PCMVolumeTransformer):
 
         if 'entries' in data:
             #Queue entire playlist
+            print("SPACER")
+            print(data)
+            try:
+                embed = nextcord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
+            except:
+                embed = nextcord.Embed(title="", description=f"Queued [{search}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
+            await ctx.send(embed=embed)
             return data
 
         embed = nextcord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
@@ -271,12 +278,12 @@ class Music(commands.Cog):
 
         # If download is False, source will be a dict which will be used later to regather the stream.
         # If download is True, source will be a nextcord.FFmpegPCMAudio with a VolumeTransformer.
-        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
-        if 'entries' in source:
-            source = source['entries']
-            for entry in source:
-                queue = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
-                await player.queue.put(queue)
+        acquisition = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+        if 'entries' in acquisition:
+            entries = acquisition['entries']
+            for entry in entries:
+                source = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
+                await player.queue.put(source)
         else:
             await player.queue.put(source)
 
@@ -401,7 +408,7 @@ class Music(commands.Cog):
                 embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
                 await ctx.send(embed=embed)
             except:
-                ctx.send("Queue size too large to display.")
+                await ctx.send("Queue size too large to display.")
     @commands.command(name='np', aliases=['song', 'current', 'currentsong', 'playing'], description="shows the current playing song")
     async def now_playing_(self, ctx):
         """Display information about the currently playing song."""
