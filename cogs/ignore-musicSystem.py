@@ -1,19 +1,12 @@
-import nextcord
+import nextcord, random, asyncio, itertools, sys, traceback
 from nextcord.ext import commands
-import random
-import asyncio
-import itertools
-import sys
-import traceback
 from async_timeout import timeout
 from functools import partial
-import youtube_dl
-from youtube_dl import YoutubeDL
-
-#I have no idea what the license on this is, it came from stackoverflow. However playlist functionality has been added by yours truly.
+import yt_dlp
+from yt_dlp import YoutubeDL
 
 # Suppress noise about console usage from errors
-youtube_dl.utils.bug_reports_message = lambda: ''
+yt_dlp.utils.bug_reports_message = lambda: ''
 
 ytdlopts = {
     'format': 'bestaudio/best',
@@ -66,22 +59,14 @@ class YTDLSource(nextcord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(cls, ctx, search: str, *, loop, download=False):
-        if 'playlist' in search:
-            await ctx.send("Playlist Requested, prepare to wait. Stream Preparation begun. Do not overencumber bot with new requests.")
         loop = loop or asyncio.get_event_loop()
+
         to_run = partial(ytdl.extract_info, url=search, download=download)
         data = await loop.run_in_executor(None, to_run)
 
         if 'entries' in data:
-            #Queue entire playlist
-            print("SPACER")
-            print(data)
-            try:
-                embed = nextcord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
-            except:
-                embed = nextcord.Embed(title="", description=f"Queued [{search}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
-            await ctx.send(embed=embed)
-            return data
+            # take first item from a playlist
+            data = data['entries'][0]
 
         embed = nextcord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=nextcord.Color.green())
         await ctx.send(embed=embed)
@@ -278,14 +263,9 @@ class Music(commands.Cog):
 
         # If download is False, source will be a dict which will be used later to regather the stream.
         # If download is True, source will be a nextcord.FFmpegPCMAudio with a VolumeTransformer.
-        acquisition = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
-        if 'entries' in acquisition:
-            entries = acquisition['entries']
-            for entry in entries:
-                source = {'webpage_url': entry['webpage_url'], 'requester': ctx.author, 'title': entry['title']}
-                await player.queue.put(source)
-        else:
-            await player.queue.put(source)
+        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+
+        await player.queue.put(source)
 
     @commands.command(name='pause', description="pauses music")
     async def pause_(self, ctx):
@@ -392,23 +372,15 @@ class Music(commands.Cog):
         else:
             duration = "%02dm %02ds" % (minutes, seconds)
 
+        # Grabs the songs in the queue...
+        upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
+        fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
+        fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
+        embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
 
-        try:
-            upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
-            fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
-            embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
-            embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-        except:
-            try:
-                upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
-                fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
-                fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
-                embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
-                await ctx.send(embed=embed)
-            except:
-                await ctx.send("Queue size too large to display.")
+        await ctx.send(embed=embed)
+
     @commands.command(name='np', aliases=['song', 'current', 'currentsong', 'playing'], description="shows the current playing song")
     async def now_playing_(self, ctx):
         """Display information about the currently playing song."""
@@ -434,7 +406,7 @@ class Music(commands.Cog):
             duration = "%02dm %02ds" % (minutes, seconds)
 
         embed = nextcord.Embed(title="", description=f"[{vc.source.title}]({vc.source.web_url}) [{vc.source.requester.mention}] | `{duration}`", color=nextcord.Color.green())
-        embed.set_author(name=f"Now Playing 🎶")
+        embed.set_author(icon_url=self.bot.user.avatar.url, name=f"Now Playing 🎶")
         await ctx.send(embed=embed)
 
     @commands.command(name='volume', aliases=['vol', 'v'], description="changes Kermit's volume")
