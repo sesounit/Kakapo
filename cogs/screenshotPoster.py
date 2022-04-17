@@ -13,7 +13,7 @@ class screenshotPoster(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         global attachments
-        channel = self.client.get_channel(911066596229910596)
+        channel = self.client.get_channel(545741090926624768)
         messages = await channel.history().flatten()
         # messages is now a list of Messages...
         for msg in messages:
@@ -24,12 +24,12 @@ class screenshotPoster(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         global unknowniterator
-        if message.channel == self.client.get_channel(911066596229910596):
+        if message.channel == self.client.get_channel(545741090926624768):
             for attachment in message.attachments:
                 if any(attachment.filename.lower().endswith(image) for image in image_types):
                     attachments.append(message)
 
-    @commands.command()
+    @commands.command(aliases=['screenshot','sc','screenie','screen'])
     async def image(self, ctx):
         global attachments
         #Find the length of the attachments list, pick a random one, then download its image. Shouldn't be any more than 8mb.
