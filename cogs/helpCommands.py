@@ -32,10 +32,9 @@ class helperCommands(commands.Cog):
 
 	@commands.command(aliases=['ipaddress', 'ip-address'])
 	async def ip(self, context):
-		embedMessage = nextcord.Embed(title = "IP ADDRESS:", description = "The IP address to the server is 173.208.192.234", color=0x0E8643)
+		embedMessage = nextcord.Embed(title = "IP ADDRESS:", description = "The IP address to the server is 54.39.131.57", color=0x0E8643)
 		embedMessage.add_field(name = "Main Server Port:", value = "2302.")
 		embedMessage.add_field(name = "Secondary Server Port:", value = "2305.")
-
 		embedMessage.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
 		await context.message.channel.send(embed = embedMessage)
 

@@ -55,7 +55,7 @@ for filename in os.listdir('./cogs'):
         else:
             try:
                 client.load_extension(f'cogs.{filename[:-3]}')
-            except:
-                print(f"WARNING: Failed to load cogs.{filename[:-3]}")
+            except Exception as e:
+                print(f"""WARNING: Failed to load cogs.{filename[:-3]}. Error is defined below:\n{e}""")
 
 client.run(os.getenv("discord_token"))
