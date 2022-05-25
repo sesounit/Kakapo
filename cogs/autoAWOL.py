@@ -6,7 +6,7 @@ global iteration
 iteration = 0
 global server
 server = None
-#Moderation Cog
+#autoAWOL Cog
 class autoAWOL(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -37,7 +37,7 @@ class autoAWOL(commands.Cog):
             timems = time.mktime(ms.timetuple()) * 1000
             activity[id] = timems
 
-    @tasks.loop(hours=168)
+    @tasks.loop(seconds=10)
     async def roleAssignment(self):
         global iteration
         if iteration == 0:
@@ -45,7 +45,7 @@ class autoAWOL(commands.Cog):
         else:
             for id in activity:
                 ms = datetime.datetime.now()
-                timems = time.mktime(ms.timetuple()) * 1000
+                timems = (time.mktime(ms.timetuple()) * 1000)
                 if activity[id] < (timems - 3456000000):
                     user = server.get_member(id)
                     role = nextcord.utils.get(server.roles, name='AWOL')
@@ -56,8 +56,8 @@ class autoAWOL(commands.Cog):
                 if operative in member.roles:
                     operativelist.append(member.id)
             for id in operativelist:
-                activity.get(id)
-                if id == None:
+                ACT = activity.get(id)
+                if ACT == None:
                     user = server.get_member(id)
                     role = nextcord.utils.get(server.roles, name='AWOL')
                     await user.add_roles(role)
