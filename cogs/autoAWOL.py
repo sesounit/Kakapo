@@ -37,7 +37,7 @@ class autoAWOL(commands.Cog):
             timems = time.mktime(ms.timetuple()) * 1000
             activity[id] = timems
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(hours=168)
     async def roleAssignment(self):
         global iteration
         if iteration == 0:
