@@ -1,5 +1,9 @@
-import wavelink
+import nextcord, wavelink, itertools
 from nextcord.ext import commands
+"""
+DO NOT USE !reload TO RELOAD WAVELINKSYSTEM, THE ENTIRE BOT MUST BE KILLED IF CHANGES ARE MADE TO WAVELINK, AS RELOAD WILL BREAK THE QUEUE.
+"""
+
 
 class Music(commands.Cog):
     """Music cog to hold Wavelink related commands and listeners."""
@@ -20,7 +24,7 @@ class Music(commands.Cog):
         await self.client.wait_until_ready()
 
         await wavelink.NodePool.create_node(bot=self.client,
-                                            host='0.0.0.0',
+                                            host='127.0.0.1',
                                             port=2333,
                                             password="yoyoyo, it's me! mario!")
 
@@ -29,8 +33,16 @@ class Music(commands.Cog):
         """Event fired when a node has finished connecting."""
         print(f'Node: <{node.identifier}> is ready!')
 
-    @commands.command(aliases=['continue','resume','re','res'])
-    async def play(self, ctx: commands.Context, search: wavelink.YouTubeTrack):
+    @commands.Cog.listener()
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
+        if not player.queue.is_empty:
+            next = player.queue.get()
+            await player.play(next)
+        else:
+            return
+ 
+    @commands.command(aliases=['continue','resume','re','res', 'p'])
+    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack):
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
@@ -43,11 +55,29 @@ class Music(commands.Cog):
             else:
                 vc: wavelink.Player = ctx.voice_client
 
-            await vc.play(search)
+            if vc.queue.is_empty and not vc.is_playing():
+                await vc.play(search)
+                await ctx.message.add_reaction('▶️')
+                await ctx.send(f'**Now playing:** `{vc.track.title}`')
+            else:
+                await vc.queue.put_wait(search)
+                await ctx.message.add_reaction('▶️')
+                await ctx.send(f'**Added to Queue:** `{search.title}`')
+
         else:
             await wavelink.Player.resume()
-        await ctx.message.add_reaction('▶️')
-        await ctx.send(f'**Now playing:** `{vc.track.title}`')
+            await ctx.message.add_reaction('▶️')
+            await ctx.send(f'**Now playing:** `{vc.track.title}`')
+    
+    @commands.command()
+    async def skip(self, ctx: commands.Context):
+        vc: wavelink.Player = ctx.voice_client
+        #stop calls on_track_end, so nothing beyond stop is actually needed here.
+        await vc.stop()
+        if not vc.queue.is_empty:
+            await ctx.send(f'**Skipped! Now Playing:** `{vc.track.title}`')
+        else:
+            await ctx.send("Queue is empty.")
 
 
     @commands.command(aliases=['ps'])
@@ -59,12 +89,25 @@ class Music(commands.Cog):
     @commands.command()
     async def stop(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
+        if not vc.queue.is_empty:
+            vc.queue.clear()
         await vc.stop()
         await ctx.message.add_reaction('⏹️')
+        h = vc.is_playing
+        print(h)
 
-    @commands.command(aliases=['dis', 'fukoff', 'fukof', 'fuckoff'])
+    @commands.command()
+    async def clear(self, ctx: commands.Context):
+        vc: wavelink.Player = ctx.voice_client
+        vc.queue.clear()
+        await ctx.send("**Queue Cleared**")
+
+    @commands.command(aliases=['dis', 'fukoff', 'fukof', 'fuckoff', 'dc'])
     async def disconnect(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
+        if not vc.queue.is_empty:
+            vc.queue.clear()
+        await vc.stop()
         await vc.disconnect()
         await ctx.message.add_reaction('⏏️')
 
@@ -85,15 +128,31 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('❓')
 
     
-    #@commands.command()
-    #async def np(self, ctx: commands.Context):
-    #    upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
-    #    fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
-    #    fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
-    #    embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
-    #    embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
+    @commands.command(aliases=["next", 'n', 'upcoming', 'coming'])
+    async def np(self, ctx: commands.Context):
+        vc: wavelink.Player = ctx.voice_client
+        if vc == None:
+            await ctx.send("Nothing is currently playing!")
+            return
+        #is_playing doesn't seem to work here, no clue why.
+        try:
+            test = vc.source.title
+        except:
+            await ctx.send("Nothing is currently playing!")
+            return
+        if not vc.queue.is_empty:
+            upcoming = vc.queue.get()
+            #vc.queue.get tells the queue to remove what it just got from the queue, the next line puts it back in.
+            vc.queue.put_at_front(upcoming)
+            upcomingt = upcoming.title
+            upcomingu = upcoming.uri
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
+        else:
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
+        embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
 #
-    #    await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
 def setup(client):
     client.add_cog(Music(client))
