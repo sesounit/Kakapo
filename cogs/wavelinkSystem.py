@@ -42,7 +42,7 @@ class Music(commands.Cog):
             return
  
     @commands.command(aliases=['continue','resume','re','res', 'p'])
-    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack):
+    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack = None):
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
@@ -65,9 +65,10 @@ class Music(commands.Cog):
                 await ctx.send(f'**Added to Queue:** `{search.title}`')
 
         else:
-            await wavelink.Player.resume()
+            vc: wavelink.Player = ctx.voice_client
+            await vc.resume()
             await ctx.message.add_reaction('▶️')
-            await ctx.send(f'**Now playing:** `{vc.track.title}`')
+            await ctx.send(f'**Resumed:** `{vc.track.title}`')
     
     @commands.command()
     async def skip(self, ctx: commands.Context):
@@ -140,18 +141,23 @@ class Music(commands.Cog):
         except:
             await ctx.send("Nothing is currently playing!")
             return
+        
+        seconds = vc.source.length
+        m, s = divmod(seconds, 60)
+        m = int(m)
+        s = int(s)
+        length = ("{0}:{1}".format(m, s))
         if not vc.queue.is_empty:
             upcoming = vc.queue.get()
             #vc.queue.get tells the queue to remove what it just got from the queue, the next line puts it back in.
             vc.queue.put_at_front(upcoming)
             upcomingt = upcoming.title
             upcomingu = upcoming.uri
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
         else:
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
         embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
-#
         await ctx.send(embed=embed)
 
 def setup(client):
