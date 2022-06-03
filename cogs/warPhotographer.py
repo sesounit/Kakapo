@@ -26,7 +26,6 @@ class warPhotographer(commands.Cog):
                 for attachment in msg.attachments:
                     if any(attachment.filename.lower().endswith(image) for image in image_types):
                         if 'unknown' in attachment.filename:
-                            print('pass')
                             await attachment.save(f'{filepath}{ctx.author.display_name}({random.randrange(1, (9999))}){attachment.filename.lower()}')
                             await ctx.send("File successfully uploaded!")
                             return
