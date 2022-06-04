@@ -190,6 +190,8 @@ class Music(commands.Cog):
     @commands.command(aliases=['upcoming', 'coming', 'q'])
     async def queue(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
+        if vc.queue.is_empty:
+            await ctx.send("Nothing is queued!")
         queuetitle = []
         queueurl = []
         for track in vc.queue:
@@ -197,7 +199,6 @@ class Music(commands.Cog):
             queuetitle.append(tracktitle)
             queueurl.append(track.uri)
         i = 0
-        print(queuetitle)
         queue = f"0) [{queuetitle[0]}]({queueurl[0]})"
         for song in queuetitle:
             if i > 10:
