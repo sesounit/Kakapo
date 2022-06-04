@@ -164,16 +164,21 @@ class Music(commands.Cog):
         m, s = divmod(seconds, 60)
         m = int(m)
         s = int(s)
+        secondspassed = vc.position
+        mp, sp = divmod(secondspassed, 60)
+        mp = int(mp)
+        sp = int(sp)
         length = ("{0}:{1}".format(m, s))
+        songposition = ("{0}:{1}".format(mp, sp))
         if not vc.queue.is_empty:
             upcoming = vc.queue.get()
             #vc.queue.get tells the queue to remove what it just got from the queue, the next line puts it back in.
             vc.queue.put_at_front(upcoming)
             upcomingt = upcoming.title
             upcomingu = upcoming.uri
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
         else:
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
         embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
         await ctx.send(embed=embed)
