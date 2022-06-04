@@ -192,6 +192,7 @@ class Music(commands.Cog):
         vc: wavelink.Player = ctx.voice_client
         if vc.queue.is_empty:
             await ctx.send("Nothing is queued!")
+            return
         queuetitle = []
         queueurl = []
         for track in vc.queue:
