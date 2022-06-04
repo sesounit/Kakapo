@@ -1,9 +1,8 @@
-import nextcord, wavelink, itertools
-from nextcord.ext import commands
-"""
-DO NOT USE !reload TO RELOAD WAVELINKSYSTEM, THE ENTIRE BOT MUST BE KILLED IF CHANGES ARE MADE TO WAVELINK, AS RELOAD WILL BREAK THE QUEUE.
-"""
+import nextcord, wavelink, time
+from nextcord.ext import commands, tasks
 
+p = None
+i = 0
 
 class Music(commands.Cog):
     """Music cog to hold Wavelink related commands and listeners."""
@@ -39,10 +38,26 @@ class Music(commands.Cog):
             next = player.queue.get()
             await player.play(next)
         else:
+            global p
+            p = player
+            global i
+            i = 0
+            await self.timeout.start()
             return
+
+    #Disconnects after 10 minutes of activity
+    @tasks.loop(minutes=10)
+    async def timeout(self):
+        global i
+        if p.queue.is_empty and i >= 1 and not p.is_playing():
+            await p.disconnect()
+        elif p.is_playing() or not p.queue.is_empty:
+            if i == 1:
+                await self.timout.cancel()
+        i = i + 1
  
     @commands.command(aliases=['continue','resume','re','res', 'p'])
-    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack):
+    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack = None):
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
@@ -65,9 +80,10 @@ class Music(commands.Cog):
                 await ctx.send(f'**Added to Queue:** `{search.title}`')
 
         else:
-            await wavelink.Player.resume()
+            vc: wavelink.Player = ctx.voice_client
+            await vc.resume()
             await ctx.message.add_reaction('▶️')
-            await ctx.send(f'**Now playing:** `{vc.track.title}`')
+            await ctx.send(f'**Resumed:** `{vc.track.title}`')
     
     @commands.command()
     async def skip(self, ctx: commands.Context):
@@ -75,7 +91,8 @@ class Music(commands.Cog):
         #stop calls on_track_end, so nothing beyond stop is actually needed here.
         await vc.stop()
         if not vc.queue.is_empty:
-            await ctx.send(f'**Skipped! Now Playing:** `{vc.track.title}`')
+            await ctx.send(f'**Skipped!**')
+            await ctx.invoke(self.client.get_command('np'))
         else:
             await ctx.send("Queue is empty.")
 
@@ -93,8 +110,6 @@ class Music(commands.Cog):
             vc.queue.clear()
         await vc.stop()
         await ctx.message.add_reaction('⏹️')
-        h = vc.is_playing
-        print(h)
 
     @commands.command()
     async def clear(self, ctx: commands.Context):
@@ -115,20 +130,22 @@ class Music(commands.Cog):
     async def volume(self, ctx: commands.Context, volume):
         volume = int(volume)
         vc: wavelink.Player = ctx.voice_client
-        await vc.set_volume(int(volume))
         if volume == 0:
             await ctx.message.add_reaction('🔇')
-        if volume >= 0 and volume < 50:
+        elif volume >= 0 and volume < 50:
             await ctx.message.add_reaction('🔈')
         elif volume >= 50 and volume < 70:
             await ctx.message.add_reaction('🔉')
         elif volume >= 70 and volume <= 100:
             await ctx.message.add_reaction('🔊')
         else:
+            #Do not let people set the volume beyond 100, for the love of god.
             await ctx.message.add_reaction('❓')
+            return
+        await vc.set_volume(volume)
 
     
-    @commands.command(aliases=["next", 'n', 'upcoming', 'coming'])
+    @commands.command(aliases=["next", 'n'])
     async def np(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
         if vc == None:
@@ -140,19 +157,62 @@ class Music(commands.Cog):
         except:
             await ctx.send("Nothing is currently playing!")
             return
+        
+        seconds = vc.source.length
+        m, s = divmod(seconds, 60)
+        m = int(m)
+        s = int(s)
+        secondspassed = vc.position
+        mp, sp = divmod(secondspassed, 60)
+        mp = int(mp)
+        sp = int(sp)
+        if s < 10:
+            length = ("{0}:0{1}".format(m, s))
+        else:
+            length = ("{0}:{1}".format(m, s))
+        if sp < 10:
+            songposition = ("{0}:0{1}".format(mp, sp))
+        else:
+            songposition = ("{0}:{1}".format(mp, sp))
         if not vc.queue.is_empty:
             upcoming = vc.queue.get()
             #vc.queue.get tells the queue to remove what it just got from the queue, the next line puts it back in.
             vc.queue.put_at_front(upcoming)
             upcomingt = upcoming.title
             upcomingu = upcoming.uri
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
         else:
-            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
-        embed = nextcord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
+        embed = nextcord.Embed(title=f'Currently Playing in {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
-#
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=['upcoming', 'coming', 'q'])
+    async def queue(self, ctx: commands.Context):
+        vc: wavelink.Player = ctx.voice_client
+        if vc.queue.is_empty:
+            await ctx.send("Nothing is queued!")
+            return
+        queuetitle = []
+        queueurl = []
+        for track in vc.queue:
+            tracktitle = track.title
+            queuetitle.append(tracktitle)
+            queueurl.append(track.uri)
+        i = 0
+        queue = f"0) [{queuetitle[0]}]({queueurl[0]})"
+        for song in queuetitle:
+            if i > 10:
+                queue = (queue + f"\n**Queue has {len(queuetitle) - 10} more tracks in queue.**")
+                break
+            if i > 0 and i < 11:
+                queue = (queue + f"\n{i}) [{song}]({queueurl[i]})")
+            i = i + 1
+        ListEmbed = nextcord.Embed(title=f"Queue for {ctx.guild.name}", description=queue, color=nextcord.Color.green())
+        ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
+        await ctx.message.channel.send(embed=ListEmbed)
+
+
 
 def setup(client):
     client.add_cog(Music(client))
