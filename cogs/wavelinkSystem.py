@@ -37,6 +37,7 @@ class Music(commands.Cog):
         if not player.queue.is_empty:
             next = player.queue.get()
             await player.play(next)
+            return
         else:
             global p
             p = player
@@ -49,11 +50,18 @@ class Music(commands.Cog):
     @tasks.loop(minutes=10)
     async def timeout(self):
         global i
-        if p.queue.is_empty and i >= 1 and not p.is_playing():
+        global p
+        if p == None:
+            await self.timeout.cancel
+        elif p.queue.is_empty and i == 1 and not p.is_playing and p():
             await p.disconnect()
+            p = None
+            await self.timeout.cancel()
         elif p.is_playing() or not p.queue.is_empty:
-            if i == 1:
-                await self.timout.cancel()
+            if i >= 1:
+                i = 0
+                p = None
+                await self.timeout.cancel()
         i = i + 1
  
     @commands.command(aliases=['continue','resume','re','res', 'p'])
@@ -122,7 +130,10 @@ class Music(commands.Cog):
         vc: wavelink.Player = ctx.voice_client
         if not vc.queue.is_empty:
             vc.queue.clear()
-        await vc.stop()
+        try:
+            await self.timeout.cancel()
+        except:
+            pass
         await vc.disconnect()
         await ctx.message.add_reaction('⏏️')
 
@@ -145,7 +156,7 @@ class Music(commands.Cog):
         await vc.set_volume(volume)
 
     
-    @commands.command(aliases=["next", 'n'])
+    @commands.command(aliases=["next", 'n', 'nowplaying'])
     async def np(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
         if vc == None:
@@ -190,6 +201,8 @@ class Music(commands.Cog):
     @commands.command(aliases=['upcoming', 'coming', 'q'])
     async def queue(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
+        if vc == None:
+            await ctx.send("No channel is connected.")
         if vc.queue.is_empty:
             await ctx.send("Nothing is queued!")
             return
