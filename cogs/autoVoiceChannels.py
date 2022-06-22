@@ -128,7 +128,7 @@ class autoVoiceChannels(commands.Cog):
                         lockedchannels.remove(channelid)
                         await realChannel.edit(user_limit=0)
     @commands.command(aliases=['ren', 'rn'])
-    async def rename(self, ctx, newname):
+    async def rename(self, ctx, *, newname):
         global lockedchannels
         channelName = ctx.message.author.voice.channel.name
         if '#' in channelName:
