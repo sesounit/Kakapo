@@ -48,7 +48,7 @@ class autoVoiceChannels(commands.Cog):
         try:
             #SESO Discord new session channel id: 694641754686881883
             #Kakapo Red Testing Discord new session channel id: 911066596456415268
-            if member.voice.channel.id == 911066596456415268:
+            if member.voice.channel.id == 694641754686881883:
                 global channelnumber
                 memberstatus = str(member.status)
                 print(memberstatus)
