@@ -55,7 +55,7 @@ class Music(commands.Cog):
         global i
         global p
         if p == None:
-            self.timeout.cancel
+            self.timeout.cancel()
         elif not p.is_playing() and i == 1:
             await p.disconnect()
             p = None
