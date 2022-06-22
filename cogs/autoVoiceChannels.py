@@ -1,5 +1,5 @@
 
-import nextcord
+import nextcord, re
 from nextcord.ext import commands, tasks
 channelnumber=1
 lockedchannels=[]
@@ -35,17 +35,20 @@ class autoVoiceChannels(commands.Cog):
     async def on_voice_state_update(self, member, before, after):
         for channel in lockedchannels:
             try:
-                if before.channel.name == channel:
-                    channelName = nextcord.utils.get(member.guild.voice_channels, name=channel)
-                    members = channelName.members
+                if before.channel.id == channel:
+                    members = before.channel.members
                     membercount = 0
                     for member in members:
                         membercount = (membercount + 1)
-                    await channelName.edit(user_limit=membercount)
+                    if membercount == 0:
+                        lockedchannels.remove(before.channel.id)
+                    await before.channel.edit(user_limit=membercount)
             except:
                 pass
         try:
-            if member.voice.channel.id == 694641754686881883:
+            #SESO Discord new session channel id: 694641754686881883
+            #Kakapo Red Testing Discord new session channel id: 911066596456415268
+            if member.voice.channel.id == 911066596456415268:
                 global channelnumber
                 memberstatus = str(member.status)
                 print(memberstatus)
@@ -79,7 +82,6 @@ class autoVoiceChannels(commands.Cog):
                 for member in members:
                     membercount = (membercount + 1)
                 if membercount == 0:
-                    print("Cleaner about to be activated.")
                     await self.cleaner.start(member)
         except:
             pass
@@ -101,30 +103,41 @@ class autoVoiceChannels(commands.Cog):
     @commands.command()
     async def lock(self, ctx):
         global lockedchannels
-        channelName = ctx.message.author.voice.channel.name
+        channelid = ctx.message.author.voice.channel.id
         for channel in lockedchannels:
-            if channel == channelName:
+            if channel == channelid:
                 await ctx.send("Channel already locked.")
         else:
-            lockedchannels.append(channelName)
-            channelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
-            members = channelName.members
+            lockedchannels.append(channelid)
+            channel = ctx.message.author.voice.channel
+            members = channel.members
             membercount = 0
             for member in members:
                 membercount = (membercount + 1)
-            await channelName.edit(user_limit=membercount)
+            await channel.edit(user_limit=membercount)
     @commands.command()
     async def unlock(self, ctx):
         global lockedchannels
-        channelName = ctx.message.author.voice.channel.name
+        channelid = ctx.message.author.voice.channel.id
         for channel in lockedchannels:
-            if channel == channelName:
-                realChannelName = nextcord.utils.get(ctx.guild.voice_channels, name=channelName)
-                members = realChannelName.members
+            if channel == channelid:
+                realChannel = ctx.message.author.voice.channel
+                members = realChannel.members
                 for member in members:
                     if ctx.message.author == member:
-                        lockedchannels.remove(channelName)
-                        await realChannelName.edit(user_limit=0)
+                        lockedchannels.remove(channelid)
+                        await realChannel.edit(user_limit=0)
+    @commands.command(aliases=['ren', 'rn'])
+    async def rename(self, ctx, newname):
+        global lockedchannels
+        channelName = ctx.message.author.voice.channel.name
+        if '#' in channelName:
+            number = int(re.search(r'\d+', channelName).group())
+            channel = ctx.message.author.voice.channel
+            await channel.edit(name=f"#{number} [{newname}]")
+            await ctx.send(f"Channel renamed to #{number} [{newname}]")
+        else:
+            await ctx.send("Channel is not able to be renamed.")
         
 
 def setup(client):
