@@ -132,10 +132,17 @@ class autoVoiceChannels(commands.Cog):
         global lockedchannels
         channelName = ctx.message.author.voice.channel.name
         if '#' in channelName:
+            if len(newname) > 19:
+                await ctx.send('New name is too long! Please limit it to 19 characters or less.')
+                return
             number = int(re.search(r'\d+', channelName).group())
             channel = ctx.message.author.voice.channel
-            await channel.edit(name=f"#{number} [{newname}]")
-            await ctx.send(f"Channel renamed to #{number} [{newname}]")
+            try:
+                await channel.edit(name=f"#{number} [{newname}]")
+                print('Channel Edited')
+                await ctx.send(f"Channel renamed to #{number} [{newname}]")
+            except:
+                await ctx.send('An error was encountered attempting to edit the channel name')
         else:
             await ctx.send("Channel is not able to be renamed.")
         
