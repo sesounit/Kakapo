@@ -43,7 +43,10 @@ class Music(commands.Cog):
             p = player
             global i
             i = 0
-            await self.timeout.start()
+            try:
+                await self.timeout.start()
+            except:
+                pass
             return
 
     #Disconnects after 10 minutes of activity
@@ -52,16 +55,16 @@ class Music(commands.Cog):
         global i
         global p
         if p == None:
-            await self.timeout.cancel
-        elif p.queue.is_empty and i == 1 and not p.is_playing and p():
+            self.timeout.cancel()
+        elif not p.is_playing() and i == 1:
             await p.disconnect()
             p = None
-            await self.timeout.cancel()
+            self.timeout.cancel()
         elif p.is_playing() or not p.queue.is_empty:
             if i >= 1:
                 i = 0
                 p = None
-                await self.timeout.cancel()
+                self.timeout.cancel()
         i = i + 1
  
     @commands.command(aliases=['continue','resume','re','res', 'p'])
