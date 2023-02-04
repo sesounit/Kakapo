@@ -54,10 +54,28 @@ class autoSlot(commands.Cog):
         if grouplist == False:
             await ctx.send("Your request did not match the required formatting, please check your input for issues.")
             return
-
         print(update_dict(database, {'operations' : {id : {'groups' : groupdict}}}))
+        server = ctx.guild
+        categories = server.categories
+        missionscategory = None
+        missionchannel = None
+        cname = database['operations'][id]['name']
+        for c in categories:
+            if c.name == 'kakapo-missions':
+                missionscategory = c
+                break
+        if missionscategory == None:
+            missionscategory = await server.create_category('kakapo-missions')
+        else:
+            for c in missionscategory.channels:
+                if c == cname:
+                    missionchannel = c
+                    break
+        if missionchannel == None:
+            missionchannel = await missionscategory.create_text_channel(cname)
+            await missionchannel.send("PLACEHOLDER")
 
-        
+
 
 
 
