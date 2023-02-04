@@ -3,7 +3,7 @@ from nextcord.ext import commands
 
 global database
 database = {'operations' : {},'highest_mission_id' : 1}
-highest_mission_id = 1
+highest_mission_id = 0
 #autoSlot Cog
 class autoSlot(commands.Cog):
     def __init__(self, client):
@@ -72,12 +72,14 @@ class autoSlot(commands.Cog):
                     missionchannel = c
                     break
         if missionchannel == None:
-            missionchannel = await missionscategory.create_text_channel(cname)
-            await missionchannel.send("PLACEHOLDER")
+            missionchannel = await missionscategory.create_text_channel(f'{id}-{cname}')
+            await missionchannel.send(preparemessage(groupdict))
 
 
 
-
+def preparemessage(groupdict):
+    message = None
+    return message
 
 def parser(data):
     '''
@@ -119,6 +121,16 @@ def parser(data):
                     groupdict.update({grouplist[0] : templist})
                 temp = ""
                 templist = []
+    groupalt = {}
+    slots = {}
+    slotcounter = 1
+    for group in grouplist:
+        for slot in groupdict[group]:
+            slots.update({slotcounter : slot})
+            slotcounter = slotcounter + 1
+        groupalt.update({group : slots})
+        slots = {}
+    groupdict = groupalt
     '''
     if temp != "":
         temp = temp.rstrip(temp[-1])
