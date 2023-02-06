@@ -11,7 +11,7 @@ class autoSlot(commands.Cog):
      
     @commands.Cog.listener()
     async def on_ready(self):
-        #Read the pre-existing activity JSON
+        #Read the pre-existing JSON
         global database
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json') as json_file:
@@ -21,21 +21,18 @@ class autoSlot(commands.Cog):
     @commands.command(name = "addMission", help = "Adds a new mission with given name. Use quotations for multi-word names")
     async def addMission(self, ctx, mission: str, date: str, time: str):
         global database
-        # name must be compatible with discord channel name restrictions
-        c = name_convert(mission)
-        # if not tell the user how is the converted version
+        #Make channel name that is compatible with discord's channel restrctions
+        c = nameconvert(mission)
         missionoriginal = mission
         if (mission != c):
-            send_message = "{} Your mission's channel will be renamed from >{}< to >{}<".format(ctx.author.mention, mission, c)
-            await ctx.send(send_message)
+            await ctx.send("{} Your mission's channel will be renamed from {} to {}".format(ctx.author.mention, mission, c))
             mission = c
 
         highest_mission_id = database['highest_mission_id']
         mission_id = str(highest_mission_id + 1)
         database['operations'].update({mission_id : {'groups' : {},'assignments' : {}, 'channelname' : mission, 'name' : missionoriginal,'author' : ctx.author.id,'date' : date,'time' : time} })
 
-        # Sending a message to the client with creation information
-        send_message = "{} Your mission ID for >{}< is: {}".format(ctx.author.mention, mission, mission_id)
+        send_message = "{} Your mission ID for {} is: {}".format(ctx.author.mention, mission, mission_id)
         highest_mission_id = highest_mission_id + 1
         database.update({'highest_mission_id' : highest_mission_id})
         await ctx.send(send_message)
@@ -258,10 +255,7 @@ def update_dict(d, u):
             d[k] = v
     return d
 
-def name_convert(name):
-    """
-    return will be name, but compatible with discord channel name restrictions
-    """
+def nameconvert(name):
     return name.replace(" ", "-").lower()
 
 def setup(client):
