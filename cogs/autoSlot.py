@@ -19,6 +19,7 @@ class autoSlot(commands.Cog):
                 print(database)
 
     @commands.command(name = "addMission", help = "Adds a new mission with given name. Use quotations for multi-word names")
+    @commands.has_permissions(administrator=True)
     async def addMission(self, ctx, mission: str, date: str, time: str):
         global database
         #Make channel name that is compatible with discord's channel restrctions
@@ -39,6 +40,7 @@ class autoSlot(commands.Cog):
         saveData()
 
     @commands.command(name = "addslots")
+    @commands.has_permissions(administrator=True)
     async def addSlots(self, ctx, id, *, slots):
         global database
         try:
@@ -148,6 +150,7 @@ class autoSlot(commands.Cog):
         saveData()
 
     @commands.command(aliases=['delmission', 'delmis', 'rmmission', 'removemission'])
+    @commands.has_permissions(administrator=True)
     async def deletemission(self, ctx, id):
         global database
         if database['operations'].get(id) == None:
