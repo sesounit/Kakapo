@@ -102,6 +102,8 @@ class autoSlot(commands.Cog):
         if slotdict.get(slotid) == None:
             await ctx.send("Slot not found.")
             return
+        if database['operations'][missionid]['assignments'].get(slotid) != None:
+            await ctx.send("Please remove the person from this slot before trying to claim it.")
         database = update_dict(database, {'operations' : {missionid : {'assignments' : {slotid : user.id}}}})
         missionscategory = None
         for c in ctx.guild.categories:
