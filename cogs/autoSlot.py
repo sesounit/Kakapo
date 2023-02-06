@@ -2,7 +2,7 @@ import nextcord, sys, datetime, json, collections, os.path
 from nextcord.ext import commands
 
 global database
-database = {'operations' : {},'highest_mission_id' : 0}
+database = {'operations' : {}}
 #autoSlot Cog
 class autoSlot(commands.Cog):
     def __init__(self, client):
@@ -16,7 +16,6 @@ class autoSlot(commands.Cog):
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json') as json_file:
                 database = json.load(json_file)
-                print(database)
 
     @commands.command(name = "addMission", help = "Adds a new mission with given name. Use quotations for multi-word names")
     @commands.has_permissions(administrator=True)
@@ -28,14 +27,18 @@ class autoSlot(commands.Cog):
         if (mission != c):
             await ctx.send("{} Your mission's channel will be renamed from {} to {}".format(ctx.author.mention, mission, c))
             mission = c
-
-        highest_mission_id = database['highest_mission_id']
-        mission_id = str(highest_mission_id + 1)
+        mission_id = None
+        for i in range(1, 11):
+            if str(i) not in database['operations']:
+                mission_id = str(i)
+                break
+        else:
+            await ctx.send("There are currently 10 active missions on ID's 1-10. Please delete old missions.")
+            return
+        
         database['operations'].update({mission_id : {'groups' : {},'assignments' : {}, 'channelname' : mission, 'name' : missionoriginal,'author' : ctx.author.id,'date' : date,'time' : time} })
 
         send_message = "{} Your mission ID for {} is: {}".format(ctx.author.mention, mission, mission_id)
-        highest_mission_id = highest_mission_id + 1
-        database.update({'highest_mission_id' : highest_mission_id})
         await ctx.send(send_message)
         saveData()
 
