@@ -19,7 +19,7 @@ class autoSlot(commands.Cog):
 
     @commands.command(name = "addMission", help = "Adds a new mission with given name. Use quotations for multi-word names")
     @commands.has_permissions(administrator=True)
-    async def addMission(self, ctx, mission: str, date: str, time: str):
+    async def addMission(self, ctx, mission: str, date: str = "", time: str = ""):
         global database
         #Make channel name that is compatible with discord's channel restrctions
         c = nameconvert(mission)
@@ -57,6 +57,7 @@ class autoSlot(commands.Cog):
         if grouplist == False:
             await ctx.send("Your request did not match the required formatting, please check your input for issues.")
             return
+        backup = database['operations'][id]['groups']
         database = update_dict(database, {'operations' : {id : {'groups' : groupdict}}})
         server = ctx.guild
         categories = server.categories
@@ -76,10 +77,32 @@ class autoSlot(commands.Cog):
                     break
         if missionchannel == None:
             missionchannel = await missionscategory.create_text_channel(f'{id}-{cname}')
-            await missionchannel.send(preparemessage(ctx, id, grouplist))
+            message = preparemessage(ctx, id, grouplist)
+            if message == None:
+                database['operations'][id]['groups'] = {}
+                await ctx.send("Please limit the length of a slotname to 20, the number of slots in a single group to 20, and the number of groups to 10.")
+                return
+            await missionchannel.send(embed=message)
         else:
-            m = await missionchannel.history().get(author__id = self.client.user.id)
-            await m.edit(preparemessage(ctx, id, grouplist))
+            message = preparemessage(ctx, id, grouplist)
+            if message == None:
+                database['operations'][id]['groups'] = backup
+                await ctx.send("Please limit the length of a slotname to 20, the number of slots in a single group to 20, and the number of groups to 10.")
+                return
+            if await missionchannel.history().get(author__id = self.client.user.id) != None:
+                m = await missionchannel.history().get(author__id = self.client.user.id)
+            else:
+                await missionchannel.send('TEMP')
+                m = await missionchannel.history().get(author__id = self.client.user.id)
+            '''
+            if len(message) > 2000:
+                print(message)
+                print(len(message))
+                database['operations'][id]['groups'] = backup
+                await ctx.send("The requested mission would surpass the Discord character limit, or leave no room for roles to be selected.")
+                return
+            '''
+            await m.edit(embed=message)
         saveData()
 
     @commands.command(aliases=['takeslot', 'claimslot', 'cslot', 'tslot', 'slot','assignslot'])
@@ -118,7 +141,7 @@ class autoSlot(commands.Cog):
             return
         channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{database['operations'][missionid]['channelname']}", category=missionscategory)
         m = await channel.history().get(author__id = self.client.user.id)
-        await m.edit(preparemessage(ctx, missionid, grouplist))
+        await m.edit(embed=preparemessage(ctx, missionid, grouplist))
         saveData()
 
     @commands.command(aliases=['deslot','removeslot'])
@@ -151,7 +174,7 @@ class autoSlot(commands.Cog):
             return
         channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{database['operations'][missionid]['channelname']}", category=missionscategory)
         m = await channel.history().get(author__id = self.client.user.id)
-        await m.edit(preparemessage(ctx, missionid, grouplist))
+        await m.edit(embed=preparemessage(ctx, missionid, grouplist))
         saveData()
 
     @commands.command(aliases=['delmission', 'delmis', 'rmmission', 'removemission'])
@@ -181,18 +204,38 @@ def saveData():
         json.dump(database, f)
 
 def preparemessage(ctx, id, grouplist):
+    #Convert to produce embed, with fields acting as group. Character limit is 1024, so limit groups to be 500.
     slots = ""
     assignments = database['operations'][id]['assignments']
+    slotEmbed = nextcord.Embed(title=f"{database['operations'][id]['name']}", description=f"By: {ctx.guild.get_member(database['operations'][id]['author']).mention} \n {database['operations'][id]['date']}, {database['operations'][id]['time']}", color=0x0E8643)
+    if len(grouplist) > 10:
+        return None
     for group in grouplist:
-        slots = slots + (f"\n**{group}:** \n")
+        slots = ""
+        slotdict = database['operations'][id]['groups'][group]
+        if len(slotdict) > 20:
+            return None
+        for slot in slotdict:
+            if len(slot) > 20:
+                return None
+            if assignments.get(slot) == None:
+                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]}\n")
+            else:
+                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]} - {ctx.guild.get_member(assignments.get(slot)).mention}\n")
+        slotEmbed.add_field(name=group, value=slots, inline=False)
+    '''
+    for group in grouplist:
+        slots = slots + (f"\n**{group}:**\n")
         slotdict = database['operations'][id]['groups'][group]
         for slot in slotdict:
             if assignments.get(slot) == None:
-                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]} \n")
+                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]}\n")
             else:
                 slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]} - {ctx.guild.get_member(assignments.get(slot)).mention}\n")
     message = f"{database['operations'][id]['name']} \n By: {ctx.guild.get_member(database['operations'][id]['author']).mention} \n {database['operations'][id]['date']}, {database['operations'][id]['time']} \n {slots}"
     return message
+    '''
+    return slotEmbed
 
 def parser(data):
     '''
