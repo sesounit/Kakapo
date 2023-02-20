@@ -80,14 +80,14 @@ class autoSlot(commands.Cog):
             message = preparemessage(ctx, id, grouplist)
             if message == None:
                 database['operations'][id]['groups'] = {}
-                await ctx.send("Please limit the length of a slotname to 20, the number of slots in a single group to 20, and the number of groups to 10.")
+                await ctx.send("Please limit the length of a slotname to 25, the number of slots in a single group to 20, and the number of groups to 10.")
                 return
             await missionchannel.send(embed=message)
         else:
             message = preparemessage(ctx, id, grouplist)
             if message == None:
                 database['operations'][id]['groups'] = backup
-                await ctx.send("Please limit the length of a slotname to 20, the number of slots in a single group to 20, and the number of groups to 10.")
+                await ctx.send("Please limit the length of a slotname to 25, the number of slots in a single group to 20, and the number of groups to 10.")
                 return
             if await missionchannel.history().get(author__id = self.client.user.id) != None:
                 m = await missionchannel.history().get(author__id = self.client.user.id)
@@ -216,7 +216,7 @@ def preparemessage(ctx, id, grouplist):
         if len(slotdict) > 20:
             return None
         for slot in slotdict:
-            if len(slot) > 20:
+            if len(slot) > 25:
                 return None
             if assignments.get(slot) == None:
                 slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]}\n")
@@ -238,10 +238,8 @@ def preparemessage(ctx, id, grouplist):
     return slotEmbed
 
 def parser(data):
-    '''
-    if ':' or '.' not in data:
+    if ':' not in data:
         return False, False
-    '''
     if data[-1] == ',':
         data = data.rstrip(data[-1])
         data = data + '.'
