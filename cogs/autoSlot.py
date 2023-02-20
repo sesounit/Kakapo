@@ -1,90 +1,96 @@
-import nextcord, sys, datetime, json, collections, os.path
+import nextcord, json, collections, os.path, datetime, re
+from datetime import datetime
 from nextcord.ext import commands
 
-global database
-database = {'operations' : {}}
 #autoSlot Cog
 class autoSlot(commands.Cog):
     def __init__(self, client):
         self.client = client
-    
-     
+        self.database = {'operations' : {}}
+
     @commands.Cog.listener()
     async def on_ready(self):
-        #Read the pre-existing JSON
-        global database
+        #Check and load pre-existing JSON
         if os.path.exists('autoSlot.json'):
-            with open('autoSlot.json') as json_file:
-                database = json.load(json_file)
+            with open('autoSlot.json', 'r') as json_file:
+                self.database = json.load(json_file)
 
-    @commands.command(name = "addMission", help = "Adds a new mission with given name. Use quotations for multi-word names")
+    @commands.command(name = "addmission", help = "Adds a new mission with given name. Use quotations for multi-word names", aliases=["am","addoperation","addop","ao"])
     @commands.has_permissions(administrator=True)
-    async def addMission(self, ctx, mission: str, date: str, time: str):
-        global database
-        #Make channel name that is compatible with discord's channel restrctions
-        c = nameconvert(mission)
-        missionoriginal = mission
-        if (mission != c):
-            await ctx.send("{} Your mission's channel will be renamed from {} to {}".format(ctx.author.mention, mission, c))
-            mission = c
-        mission_id = None
-        for i in range(1, 11):
-            if str(i) not in database['operations']:
-                mission_id = str(i)
-                break
-        else:
-            await ctx.send("There are currently 10 active missions on ID's 1-10. Please delete old missions.")
-            return
-        
-        database['operations'].update({mission_id : {'groups' : {},'assignments' : {}, 'channelname' : mission, 'name' : missionoriginal,'author' : ctx.author.id,'date' : date,'time' : time} })
+    async def addMission(self, ctx, mission_name: str):
+        mission_id = len(self.database['operations'])
 
-        send_message = "{} Your mission ID for {} is: {}".format(ctx.author.mention, mission, mission_id)
-        await ctx.send(send_message)
-        saveData()
+        # Make channel name that is compatible with discord's channel restrictions
+        mission_name_converted = mission_name.replace(" ", "-").lower()
+
+
+        # Warn user that mission name is converted for discord channel restrictions
+        if (mission_name != mission_name_converted):
+            await ctx.send(f"{ctx.author.mention} Your mission's channel will be named {mission_name_converted} from {mission_name}")
+
+        #Warn user if there are more than 10 missions in database
+        if len(self.database['operations']) > 10:
+            await ctx.send("There are currently 10 active missions on ID's 1-10. Please delete old missions.")
+            #return
+
+        # Add operation to database
+        self.database['operations'].update({mission_id : {'groups' : {}, 'channel_name' : mission_name_converted, 'name' : mission_name,'author' : ctx.author.id} })
+
+        await ctx.send(f"{ctx.author.mention} Your mission ID for {mission_name_converted} is: {mission_id}")
+        self.saveData()
 
     @commands.command(name = "addslots")
     @commands.has_permissions(administrator=True)
     async def addSlots(self, ctx, id, *, slots):
-        global database
+        # Check if mission ID exists
         try:
-            if id not in database['operations']:
-                await ctx.send("There is no mission present in the database with this ID.")
-                return
+            if id not in self.database['operations']:
+                return await ctx.send("There is no mission present in the database with this ID.")
         except:
-            await ctx.send("A problem occured with the mission id.")
-            return
-        grouplist, groupdict = parser(slots)
-        if grouplist == False:
-            await ctx.send("Your request did not match the required formatting, please check your input for issues.")
-            return
-        database = update_dict(database, {'operations' : {id : {'groups' : groupdict}}})
-        server = ctx.guild
-        categories = server.categories
-        missionscategory = None
-        missionchannel = None
-        cname = database['operations'][id]['channelname']
-        for c in categories:
-            if c.name == 'kakapo-missions':
-                missionscategory = c
-                break
-        if missionscategory == None:
-            missionscategory = await server.create_category('kakapo-missions')
-        else:
-            for c in missionscategory.channels:
-                if c.name == (f"{id}-{cname}"):
-                    missionchannel = c
-                    break
-        if missionchannel == None:
-            missionchannel = await missionscategory.create_text_channel(f'{id}-{cname}')
-            await missionchannel.send(preparemessage(ctx, id, grouplist))
-        else:
-            m = await missionchannel.history().get(author__id = self.client.user.id)
-            await m.edit(preparemessage(ctx, id, grouplist))
-        saveData()
+            return await ctx.send("A problem occurred with the mission id.")
 
-    @commands.command(aliases=['takeslot', 'claimslot', 'cslot', 'tslot', 'slot','assignslot'])
+        # Parse slots to proper dictionary of groups
+        group_dict = self.parseGroups(slots)
+
+        # Save groups to database under specific mission id
+        # self.database = self.updateDict(self.database, {'operations' : {id : {'groups' : group_dict}}})
+        self.database['operations'][id]['groups'] = group_dict
+
+
+        # Look for the missions_category and mission_channel
+        missions_category = None
+        mission_channel = None
+        channel_name = self.database['operations'][id]['channel_name']
+
+        # Look for roster category. If it doesnt exist, create it
+        #TODO: Logic Error, keeps making a new roster category for every category that isnt called roster
+        for category in ctx.guild.categories:
+            if category.name == 'rosters':
+                missions_category = category
+                break
+        if missions_category is None:
+            missions_category = await ctx.guild.create_category('rosters')
+
+        # Once created, look for the mission channel. Otherwise, create it
+        for channel in missions_category.channels:
+            if channel.name == (f"{id}-{channel_name}"):
+                mission_channel = channel
+                break
+
+        if mission_channel is None:
+            mission_channel = await missions_category.create_text_channel(f'{id}-{channel_name}')
+            await mission_channel.send(self.parseRoster(ctx, id, group_dict))
+        else:
+            previous_roster = await mission_channel.history().get(author__id = self.client.user.id)
+            await previous_roster.edit(self.parseRoster(ctx, id, group_dict))
+
+        # Post the roster
+        #m = await mission_channel.history().get(author__id = self.client.user.id)
+        #await mission_channel.history().get(author__id = self.client.user.id).edit(self.parseRoster(ctx, id, group_dict))
+        self.saveData()
+
+    @commands.command(aliases=['assignslot','takeslot', 'claimslot', 'cslot', 'tslot','slot'])
     async def aslot(self, ctx, missionid, slotid, target=None):
-        global database
         user = ctx.author
         if target != None:
             if ctx.author.guild_permissions.manage_messages != True:
@@ -92,55 +98,54 @@ class autoSlot(commands.Cog):
                 return
             user = ctx.guild.get_member(int(target.translate({ord(i): None for i in '@<>'})))
             if user == None:
-                await ctx.send("Failed to find user.")         
-        if database['operations'].get(missionid) == None:
+                await ctx.send("Failed to find user.")
+        if self.database['operations'].get(missionid) == None:
             await ctx.send(f"MissionID of {missionid} not found.")
             return
         grouplist = []
         slotdict = {}
-        for group in database['operations'][missionid]['groups']:
+        for group in self.database['operations'][missionid]['groups']:
             grouplist.append(group)
         for group in grouplist:
-            slotdict.update(database['operations'][missionid]['groups'][group])
+            slotdict.update(self.database['operations'][missionid]['groups'][group])
         if slotdict.get(slotid) == None:
             await ctx.send("Slot not found.")
             return
-        if database['operations'][missionid]['assignments'].get(slotid) != None:
+        if self.database['operations'][missionid]['assignments'].get(slotid) != None:
             await ctx.send("Please remove the person from this slot before trying to claim it.")
-        database = update_dict(database, {'operations' : {missionid : {'assignments' : {slotid : user.id}}}})
+        self.database = self.updateDict(self.database, {'operations' : {missionid : {'assignments' : {slotid : user.id}}}})
         missionscategory = None
         for c in ctx.guild.categories:
-            if c.name == 'kakapo-missions':
+            if c.name == 'rosters':
                 missionscategory = c
                 break
         if missionscategory == None:
             await ctx.send("No channel can be found for this mission can be found. Have roles been added yet?")
             return
-        channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{database['operations'][missionid]['channelname']}", category=missionscategory)
+        channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{self.database['operations'][missionid]['channelname']}", category=missionscategory)
         m = await channel.history().get(author__id = self.client.user.id)
-        await m.edit(preparemessage(ctx, missionid, grouplist))
-        saveData()
+        await m.edit(self.parseRoster(ctx, missionid, grouplist))
+        self.saveData()
 
-    @commands.command(aliases=['deslot','removeslot'])
+    @commands.command(aliases=['deleteslot','delslot','removeslot','rmslot'])
     async def rslot(self, ctx, missionid, slotid):
-        global database
-        if database['operations'].get(missionid) == None:
+        if self.database['operations'].get(missionid) == None:
             await ctx.send(f"MissionID of {missionid} not found.")
             return
         grouplist = []
         slotdict = {}
-        for group in database['operations'][missionid]['groups']:
+        for group in self.database['operations'][missionid]['groups']:
             grouplist.append(group)
         for group in grouplist:
-            slotdict.update(database['operations'][missionid]['groups'][group])
+            slotdict.update(self.database['operations'][missionid]['groups'][group])
         if slotdict.get(slotid) == None:
             await ctx.send("Slot not found.")
             return
-        if database['operations'][missionid]['assignments'].get(slotid) != ctx.author.id:
+        if self.database['operations'][missionid]['assignments'].get(slotid) != ctx.author.id:
             if ctx.author.guild_permissions.manage_messages != True:
                 await ctx.send('You do not have permissions to remove the slot of someone other than yourself.')
                 return
-        del database['operations'][missionid]['assignments'][slotid]
+        del self.database['operations'][missionid]['assignments'][slotid]
         missionscategory = None
         for c in ctx.guild.categories:
             if c.name == 'kakapo-missions':
@@ -149,16 +154,16 @@ class autoSlot(commands.Cog):
         if missionscategory == None:
             await ctx.send("No channel can be found for this mission can be found. Have roles been added yet?")
             return
-        channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{database['operations'][missionid]['channelname']}", category=missionscategory)
+        channel = nextcord.utils.get(ctx.guild.channels, name=f"{missionid}-{self.database['operations'][missionid]['channelname']}", category=missionscategory)
         m = await channel.history().get(author__id = self.client.user.id)
-        await m.edit(preparemessage(ctx, missionid, grouplist))
-        saveData()
+        await m.edit(self.prepareMessage(ctx, missionid, grouplist))
+        self.saveData()
 
+    # Remove mission
     @commands.command(aliases=['delmission', 'delmis', 'rmmission', 'removemission'])
     @commands.has_permissions(administrator=True)
-    async def deletemission(self, ctx, id):
-        global database
-        if database['operations'].get(id) == None:
+    async def deleteMission(self, ctx, id):
+        if self.database['operations'].get(id) == None:
             await ctx.send("No mission found with that ID.")
             return
         missionscategory = None
@@ -167,104 +172,64 @@ class autoSlot(commands.Cog):
                 missionscategory = c
                 break
         if missionscategory != None:
-            channel = nextcord.utils.get(ctx.guild.channels, name=f"{id}-{database['operations'][id]['channelname']}", category=missionscategory)
+            channel = nextcord.utils.get(ctx.guild.channels, name=f"{id}-{self.database['operations'][id]['channelname']}", category=missionscategory)
             if channel != None:
                 await channel.delete()
                 await ctx.send("Channel deleted.")
-        del database['operations'][id]
+        del self.database['operations'][id]
         await ctx.send(f"{ctx.author.mention}Mission removed!")
-        saveData()
+        self.saveData()
 
-#Centralized function for saving data.
-def saveData():
-    with open('autoSlot.json', 'w') as f:
-        json.dump(database, f)
+    # Dumps data to autoSlot.json
+    def saveData(self):
+        with open('autoSlot.json', 'w') as f:
+            json.dump(self.database, f)
 
-def preparemessage(ctx, id, grouplist):
-    slots = ""
-    assignments = database['operations'][id]['assignments']
-    for group in grouplist:
-        slots = slots + (f"\n**{group}:** \n")
-        slotdict = database['operations'][id]['groups'][group]
-        for slot in slotdict:
-            if assignments.get(slot) == None:
-                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]} \n")
-            else:
-                slots = slots + (f"{slot}: {database['operations'][id]['groups'][group][slot]} - {ctx.guild.get_member(assignments.get(slot)).mention}\n")
-    message = f"{database['operations'][id]['name']} \n By: {ctx.guild.get_member(database['operations'][id]['author']).mention} \n {database['operations'][id]['date']}, {database['operations'][id]['time']} \n {slots}"
-    return message
-
-def parser(data):
-    '''
-    if ':' or '.' not in data:
-        return False, False
-    '''
-    if data[-1] == ',':
-        data = data.rstrip(data[-1])
-        data = data + '.'
-    elif data[-1] != '.':
-        data = data + '.'
-    datalist = data.split(" ")
-    temp = ""
-    grouplist = []
-    templist = []
-    groupdict = {}
-    for i in datalist:
-        temp = temp + f'{i} '
-        if ':' in i:
-            temp = temp.rstrip(temp[-1])
-            temp = temp.rstrip(temp[-1])
-            grouplist.append(temp)
-            groupdict.update({temp : 'placeholder'})
-            temp = ""
-        if ',' in i:
-            temp = temp.rstrip(temp[-1])
-            temp = temp.rstrip(temp[-1])
-            if temp != "":
-                templist.append(temp)
-                temp = ""
-        if '.' in i:
-            temp = temp.rstrip(temp[-1])
-            temp = temp.rstrip(temp[-1])
-            if temp != "":
-                templist.append(temp)
-                if len(grouplist) > 0:
-                    groupdict.update({grouplist[len(grouplist) - 1] : templist})
+    def parseRoster(self,ctx, id, group_dict):
+        slots = ""
+        assignments = self.database['operations'][id]['assignments']
+        for group in group_dict:
+            slots = slots + (f"\n**{group}:** \n")
+            slotdict = self.database['operations'][id]['groups'][group]
+            for slot in slotdict:
+                if assignments.get(slot) == None:
+                    slots = slots + (f"{slot}: {self.database['operations'][id]['groups'][group][slot]} \n")
                 else:
-                    groupdict.update({grouplist[0] : templist})
-                temp = ""
-                templist = []
-    groupalt = {}
-    slots = {}
-    slotcounter = 1
-    for group in grouplist:
-        for slot in groupdict[group]:
-            slots.update({str(slotcounter) : slot})
-            slotcounter = slotcounter + 1
-        groupalt.update({group : slots})
-        slots = {}
-    groupdict = groupalt
-    '''
-    if temp != "":
-        temp = temp.rstrip(temp[-1])
-        roledict.update({temp : grouplist[len(grouplist) - 1]})
-        temp = ""
-        '''
-    return grouplist, groupdict
+                    slots = slots + (f"{slot}: {self.database['operations'][id]['groups'][group][slot]} - {ctx.guild.get_member(assignments.get(slot)).mention}\n")
+        return f"{self.database['operations'][id]['name']} \n By: {ctx.guild.get_member(self.database['operations'][id]['author']).mention} \n {self.database['operations'][id]['date']}, {self.database['operations'][id]['time']} \n {slots}"
 
-def update_dict(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.Mapping):
-            default = v.copy()
-            default.clear()
-            r = update_dict(d.get(k, default), v)
-            d[k] = r
-        else:
-            d[k] = v
-    return d
+    # Parse inputted slots into autoSlot format
+    def parseGroups(self,data):
 
-def nameconvert(name):
-    return name.replace(" ", "-").lower()
+        # Init slots dictionary
+        slots = dict()
+
+        # Break up the roles into their own groups
+        groups = re.split("\. ?",data)
+        for group in groups:
+            # Special if statement to remove empty strings
+            if len(group) < 2:
+                continue
+            # Split roles in a group, with the first "role" representing the group's name
+            roles = re.split(": |, |\. ",group)
+            # Convert roles list to dict for assignments
+            roles = { role: None for role in roles[1:] }
+            slots[roles[0]] = roles[1:]
+            #roles = re.split(": |, |\. ",group)
+            #slots[roles[0]] = roles[1:]
+
+        return slots
+
+    def updateDict(self,database, new_dict):
+        for k, v in new_dict.items():
+            if isinstance(v, collections.Mapping):
+                default = v.copy()
+                default.clear()
+                r = self.updateDict(database.get(k, default), v)
+                database[k] = r
+            else:
+                database[k] = v
+        return database
 
 def setup(client):
     client.add_cog(autoSlot(client))
