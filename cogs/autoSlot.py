@@ -293,7 +293,7 @@ class autoSlot(commands.Cog):
             if len(slot_dict) > 20:
                 return None
             for slot in slot_dict:
-                if len(slot) > 20:
+                if len(slot) > 25:
                     return None
                 if assignments.get(slot) == None:
                     slots = slots + (f"{slot}: {self.database['operations'][operation_id]['groups'][group][slot]}\n")
