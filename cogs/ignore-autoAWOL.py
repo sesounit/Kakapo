@@ -1,4 +1,4 @@
-import nextcord, datetime, time, json
+import nextcord, datetime, time, json, os
 from nextcord.ext import commands, tasks
 global activity
 activity = {}
@@ -17,8 +17,9 @@ class autoAWOL(commands.Cog):
     async def on_ready(self):
         #Read the pre-existing activity JSON
         global activity
-        with open('activity-dump.json') as json_file:
-            activity = json.load(json_file)
+        if os.path.exists('autoSlot.json'):
+            with open('activity-dump.json') as json_file:
+                activity = json.load(json_file)
         await self.roleAssignment.start()
 
     @commands.Cog.listener()
@@ -81,7 +82,7 @@ class autoAWOL(commands.Cog):
                 ms = datetime.datetime.now()
                 timems = time.mktime(ms.timetuple()) * 1000
                 activity[str(id)] = str(timems)
-        #Dump data into a JSON every week.
+        #Dump data into a JSON every call.
         with open('activity-dump.json', 'w') as f:
             json.dump(activity, f)
                 
