@@ -4,7 +4,7 @@ global muted
 my_file = open("muted.txt", "r")
 muted = my_file.readlines()
 my_file.close()
-print(muted)
+#print(muted)
 intents = nextcord.Intents.default()
 intents.members = True
 
@@ -59,14 +59,14 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def mute(self, ctx, *, member : nextcord.Member):
         global muted
-        print(muted)
+        #print(muted)
         guild = ctx.guild
         role = nextcord.utils.get(ctx.guild.roles, name='Muted')
         user = member
         await user.add_roles(role)
         await user.edit(mute=True)
         user = str(user)
-        print(user)
+        #print(user)
         muted.append(user)
         with open("muted.txt", "w") as f:
             for element in muted:
@@ -82,7 +82,7 @@ class Moderation(commands.Cog):
         await user.remove_roles(role)
         await user.edit(mute=False)
         user = str(user)
-        print(user)
+        #print(user)
         print(f'before removal: {muted}')
         muted.remove(user)
         print(f'post removal: {muted}')
