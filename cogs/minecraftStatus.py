@@ -35,12 +35,12 @@ class minecraftStatus(commands.Cog):
     @tasks.loop(minutes=10)
     async def change_status(self):
         serverc, serverm, serverl = await server.pingServer()
-        await self.client.change_presence(activity=nextcord.Game(f"Jollaniancraft with {serverc}/{serverm}"))
+        await self.client.change_presence(activity=nextcord.Game(f"Pickloniancraft with {serverc}/{serverm}"))
 
     @commands.command(aliases=['status','serverstatus', 'players', 'online'])
     async def server(self, ctx):
         serverc, serverm, serverl = await server.pingServer()
-        statusEmbed = nextcord.Embed(title="Server Status", description=f"Jollaniancraft's Population is currently {serverc}/{serverm}", color=0x00ff00)
+        statusEmbed = nextcord.Embed(title="Server Status", description=f"Pickloniancraft's Population is currently {serverc}/{serverm}", color=0x00ff00)
         statusEmbed.add_field(name="Players:", value=serverl, inline=False)
         statusEmbed.set_footer(text="Kakapo Minecraft Functionality by Pickle423#0408")
         await ctx.send(embed=statusEmbed)

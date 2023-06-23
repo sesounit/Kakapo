@@ -24,11 +24,11 @@ We focus on on EST (Eastern United States) timezone. We have players from PST, M
 Operation | Saturday | Sunday
 :--|:--|:--
 Operation Angola | 1800 EST |
-Operation Osiris | TBA | TBA
+Operation Osiris | | 1800 EST
 
 ***
 # S.E.S.O.
-SESO was established in 2018 with a focus on variety and story. We design 3-month long operations that are fun to play, easy to join, and contribute to the [SESO canon](https://wiki.sesounit.org/canon:list). We like to create The casual playstyle is tailored to allow one to join an operation as soon as possible. There is no required experience, minimum age, or test.
+SESO was established in 2018 with a focus on variety and story. We design 3-month long operations that are fun to play, easy to join, and contribute to the [SESO canon](https://wiki.sesounit.org/canon:list). The casual playstyle is tailored to allow one to join an operation as soon as possible. There is no required experience, minimum age, or test.
 
 ## Rankless Structure
 
@@ -64,14 +64,21 @@ All media is linked and provided on the [S.E.S.O. Youtube Channel](https://www.y
 ***
 
 # How to Join S.E.S.O.
-Follow the [New Operator Guide](https://wiki.sesounit.org/tutorials_guides:operator_guide) at our wiki.
+Follow the [New Operator Guide](https://wiki.sesounit.org/guides/new_operative) at our wiki.
 
 If you have any questions, please join us in our Discord:
 https://discord.gg/AVE9Gvq97C
 
 ***"""
 
+# subreddit = reddit.subreddit('FindAUnit')
+#submission = subreddit.submit(
+#	'[NA][Recruiting][Casual][A3] S.E.S.O. | Private Military Company',
+#	selftext=s,)
+
 subreddit = reddit.subreddit('FindAUnit')
-submission = subreddit.submit(
-	'[NA][Recruiting][Casual][A3] S.E.S.O. | Private Military Company', 
-	selftext=s,)
+submission = subreddit.submit_image(
+	'[NA][Recruiting][Casual][A3] S.E.S.O. | Private Military Company',
+	'result.jpg'
+)
+submission.reply(s)
