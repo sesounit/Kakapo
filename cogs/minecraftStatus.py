@@ -12,7 +12,7 @@ class server():
                             serverm = response_info['players']['max']
                         except:
                             serverc = 0
-                            serverm = 20
+                            serverm = 16
                             serverl = 'Server is currently offline, checkback later.'
                             return serverc, serverm, serverl
                         try:
@@ -42,7 +42,7 @@ class minecraftStatus(commands.Cog):
         serverc, serverm, serverl = await server.pingServer()
         statusEmbed = nextcord.Embed(title="Server Status", description=f"Jollaniancraft's Population is currently {serverc}/{serverm}", color=0x00ff00)
         statusEmbed.add_field(name="Players:", value=serverl, inline=False)
-        statusEmbed.set_footer(text="If the bot responded, that means the server is up!")
+        statusEmbed.set_footer(text="Kakapo Minecraft Functionality by Pickle423#0408")
         await ctx.send(embed=statusEmbed)
 
 
