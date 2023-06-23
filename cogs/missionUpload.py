@@ -1,35 +1,34 @@
 import nextcord, random
 from nextcord.ext import commands, tasks
-#Types of images we'll accept.
-image_types = ["png", "jpeg", "jpg"]
-filepath = 'uploaded/'
-global attachments
-attachments = []
-#Warphotographer Screenshot Uploader Cog
-class warPhotographer(commands.Cog):
+filepath = '~/serverfiles/mpmissions/'
+
+#Mission Upload cog
+class missionUpload(commands.Cog):
     def __init__(self, client):
         self.client = client
     
-    @commands.command(aliases=['uploadscreenshot', 'usc', 'u'])
-    @commands.has_permissions(administrator=True)
-    async def upload(self, ctx):
+    async def cog_check(self, ctx):
+        #Check if user has requisite roles
+        ch = nextcord.utils.get(ctx.guild.roles, name='Campaign Host')
+        oh = nextcord.utils.get(ctx.guild.roles, name='Operation Host')
+        if ch in ctx.author.roles or oh in ctx.author.roles or ctx.author.guild_permissions.administrator:
+            return True
+        return False
+
+    @commands.command(aliases=['serverUpload', 'um', 'su'])
+    async def uploadMission(self, ctx):
         messages = await ctx.channel.history(limit=2).flatten()
-        for msg in messages:
-            if msg.author == ctx.author:
-                for attachment in msg.attachments:
-                    if any(attachment.filename.lower().endswith(image) for image in image_types):
-                        if 'unknown' in attachment.filename:
-                            await attachment.save(f'{filepath}{ctx.author.display_name}({random.randrange(1, (9999))}){attachment.filename.lower()}')
-                            await ctx.send("File successfully uploaded!")
-                            return
-                        await attachment.save(f'{filepath}{ctx.author.display_name}{attachment.filename.lower()}')
-                        await ctx.send("File successfully uploaded!")
-                        return
-            else:
-                await ctx.send("Last message is not your own.")
+        if len(ctx.message.attachments) < 2 and len(ctx.message.attachments) > 0:
+            attachment = ctx.message.attachments[0]
+            if 'pbo' in attachment.filename:
+                await attachment.save(f'{filepath}/{ctx.author.name}-{attachment.filename}')
+                await ctx.send(f'{ctx.author.mention} has uploaded {attachment.filename} to the server.')
                 return
-        await ctx.send("Something undefined went wrong processing your request.")
+        else:
+            await ctx.send("Either too many attachments found, or none found.")
+            return
+        await ctx.send("Filetype is incorrect, please only upload pbo's.")
 
 
 def setup(client):
-    client.add_cog(warPhotographer(client))
+    client.add_cog(missionUpload(client))
