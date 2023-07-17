@@ -166,21 +166,13 @@ class autoSlot(commands.Cog):
         if self.database['operations'][operation_id]['assignments'].get(slot_id):
             return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
         
-        """ Because the file is modified during runtime, it throws the error "Command raised an exception: RuntimeError: dictionary changed size during iteration" Until this is resolved we cannot have players switch roles in 1 command. 
+       
 
         # Check if user already has a slot, (and the slot exists, and the slot doesnt already have a user from the checks above)
-        print("TEST 1 >>>>>>>>>>>" + slot_id)
-        for slot in self.database['operations'][operation_id]['assignments']:
+        for slot in self.database.copy()['operations'][operation_id]['assignments']:
             if ctx.author.id == self.database['operations'][operation_id]['assignments'].get(slot):
-                temp = slot_id
-                print("TEST 2 >>>>>>>>>>>" + slot + "  " + temp)
                 del self.database['operations'][operation_id]['assignments'][slot]
-                print("TEST 3 >>>>>>>>>>>")
-                slot_id = slot
-                print("TEST 4 >>>>>>>>>>>")
-            else:
-                await botCommandsChannel.send("Slot not found.")
-        """
+                break
 
         # Check if user already has a slot
         for slot in self.database['operations'][operation_id]['assignments']:
@@ -209,7 +201,7 @@ class autoSlot(commands.Cog):
         await botCommandsChannel.send(f"{ctx.author.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
     @commands.command(aliases=['deleteslot','delslot','removeslot','rmslot'])
-    async def rslot(self, ctx, slot_id=0):
+    async def rslot(self, ctx, slot_id=None):
 
         # Determine Op ID by channel name
         operation_id = str(ctx.channel)[0]
@@ -233,23 +225,25 @@ class autoSlot(commands.Cog):
         for group in self.database['operations'][operation_id]['groups']:
             group_list.append(group)
             slot_dict.update(self.database['operations'][operation_id]['groups'][group])
+        
+        if slot_id != None:
+            # Check if slot exists
+            if slot_dict.get(slot_id) == None:
+                return await botCommandsChannel.send("Slot not found.") 
 
-        # Find user slot
-        for slot in self.database['operations'][operation_id]['assignments']:
-            if ctx.author.id == self.database['operations'][operation_id]['assignments'].get(slot):
-                slot_id = slot
+        if slot_id != None and self.database['operations'][operation_id]['assignments'].get(slot_id) != ctx.author.id:
+            if "Campaign Host" in ctx.author.roles or "Operations Command" in ctx.author.roles or "Command Consultant" in ctx.author.roles or "Operation Host" in ctx.author.roles:
+                return await botCommandsChannel.send('You are not a host. Only hosts can remove another operative from a slot.')
+            del self.database['operations'][operation_id]['assignments'][slot_id]
+        else:
+            # Find user slot
+            for slot in self.database['operations'][operation_id]['assignments']:
+                if ctx.author.id == self.database['operations'][operation_id]['assignments'].get(slot):
+                    slot_id = slot
+                    break
             else:
                 await botCommandsChannel.send("Slot not found.")
-
-        # Check if slot exists
-        if slot_dict.get(slot_id) == None:
-            return await botCommandsChannel.send("Slot not found.")
-
-        # Delete user from database
-        if self.database['operations'][operation_id]['assignments'].get(slot_id) != ctx.author.id:
-            if ctx.author.roles in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
-                 return await botCommandsChannel.send('You are not a host. Only hosts can remove another operative from a slot.')
-        del self.database['operations'][operation_id]['assignments'][slot_id]
+            del self.database['operations'][operation_id]['assignments'][slot_id]
 
         # Check if roster_category exists, otherwise create it
         for category in ctx.guild.categories:
@@ -257,7 +251,7 @@ class autoSlot(commands.Cog):
                 self.roster_category = category
                 break
         if self.roster_category == None:
-            return await botCommandsChannel.send("No channel can be found for this operation can be found. Have roles been added yet?")
+            return await botCommandsChannel.send("No channel for this operation can be found. Have roles been added yet?")
         
         # Edit embed 
         roster_channel = nextcord.utils.get(ctx.guild.channels, name=f"{operation_id}-{self.database['operations'][operation_id]['channel_name']}", category=self.roster_category)
@@ -266,7 +260,7 @@ class autoSlot(commands.Cog):
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.author.mention} has removed themself from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+        await botCommandsChannel.send(f"{ctx.author.mention} has removed a user from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
     
     @commands.command(aliases=['deleteslotall','delslotall','removeslotall','rmslotall','deleteallslots','delallslots','removeallslots','rmallslots'])
