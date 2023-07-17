@@ -160,11 +160,28 @@ class autoSlot(commands.Cog):
         # Check if slot exists
         if slot_dict.get(slot_id) == None:
             return await botCommandsChannel.send(f"Slot ID {slot_id} not found.")
+        
         # Check if slot already has user
 
         if self.database['operations'][operation_id]['assignments'].get(slot_id):
             return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
         
+        """ Because the file is modified during runtime, it throws the error "Command raised an exception: RuntimeError: dictionary changed size during iteration" Until this is resolved we cannot have players switch roles in 1 command. 
+
+        # Check if user already has a slot, (and the slot exists, and the slot doesnt already have a user from the checks above)
+        print("TEST 1 >>>>>>>>>>>" + slot_id)
+        for slot in self.database['operations'][operation_id]['assignments']:
+            if ctx.author.id == self.database['operations'][operation_id]['assignments'].get(slot):
+                temp = slot_id
+                print("TEST 2 >>>>>>>>>>>" + slot + "  " + temp)
+                del self.database['operations'][operation_id]['assignments'][slot]
+                print("TEST 3 >>>>>>>>>>>")
+                slot_id = slot
+                print("TEST 4 >>>>>>>>>>>")
+            else:
+                await botCommandsChannel.send("Slot not found.")
+        """
+
         # Check if user already has a slot
         for slot in self.database['operations'][operation_id]['assignments']:
             if ctx.author.id == self.database['operations'][operation_id]['assignments'].get(slot):
