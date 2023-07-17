@@ -2,7 +2,7 @@ import nextcord, random
 from nextcord.ext import commands, tasks
 #Types of images we'll accept.
 image_types = ["png", "jpeg", "jpg"]
-filepath = 'uploaded/'
+filepath = '~/11ty-sesosite/assets/img/raw_media/'
 global attachments
 attachments = []
 #Warphotographer Screenshot Uploader Cog

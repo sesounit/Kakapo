@@ -9,9 +9,7 @@ class missionUpload(commands.Cog):
     
     async def cog_check(self, ctx):
         #Check if user has requisite roles
-        ch = nextcord.utils.get(ctx.guild.roles, name='Campaign Host')
-        oh = nextcord.utils.get(ctx.guild.roles, name='Operation Host')
-        if ch in ctx.author.roles or oh in ctx.author.roles or ctx.author.guild_permissions.administrator:
+        if ctx.author.roles in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
             return True
         return False
 
@@ -27,7 +25,7 @@ class missionUpload(commands.Cog):
         else:
             await ctx.send("Either too many attachments found, or none found.")
             return
-        await ctx.send("Filetype is incorrect, please only upload pbo's.")
+        await ctx.send("File type is incorrect, please only upload pbos.")
 
 
 def setup(client):

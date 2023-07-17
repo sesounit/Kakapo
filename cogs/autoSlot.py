@@ -138,7 +138,7 @@ class autoSlot(commands.Cog):
         # Check target user if they exist
         if target:
             # If author is not a host, stop execution
-            if ctx.author.roles in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
+            if ctx.author.roles not in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
                  return await botCommandsChannel.send('You are not a host. Only hosts can assign another operative to a slot.')
             # Find and set ctx.author to target
             ctx.author = ctx.guild.get_member(int(target.translate({ord(i): None for i in '@<>'})))
