@@ -113,7 +113,7 @@ class autoSlot(commands.Cog):
         # Notify user
         await ctx.send(f"{ctx.author.mention} has added slots to {self.database['operations'][operation_id]['channel_name']}.")
 
-    @commands.command(aliases=['assignslot','takeslot', 'claimslot', 'cslot', 'tslot','slot'])
+    @commands.command(aliases=['assignslot','takeslot', 'claimslot', 'cslot', 'tslot','slot','role'])
     async def aslot(self, ctx, operation_id, slot_id, target=None):
 
         # Check target user if they exist
