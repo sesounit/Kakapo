@@ -1,6 +1,7 @@
 import nextcord, json, collections, os.path#, datetime, re
 #from datetime import datetime
 from nextcord.ext import commands
+from nextcord.ui import Select, Button, View
 
 #autoSlot Cog
 class autoSlot(commands.Cog):
@@ -106,14 +107,52 @@ class autoSlot(commands.Cog):
             #TODO: Move slotname checking to parseStringToGroups instead of embedGroupsToRoster
             self.database['operations'][operation_id]['groups'] = {}
             return await botCommandsChannel.send("Please limit the length of a slotname to 25, the number of slots in a single group to 20, and the number of groups to 10.")
+        view = View()
+        if len(self.database['operations'][operation_id]['groups']) > 1:
+            firstgroup, *_, lastgroup = self.database['operations'][operation_id]['groups'].keys()
+            if len(self.database['operations'][operation_id]['groups'][lastgroup].keys()) > 1:
+                firstslot, *_, lastslot = self.database['operations'][operation_id]['groups'][lastgroup].keys()
+            else:
+                *_, lastslot = self.database['operations'][operation_id]['groups'][lastgroup].keys()
+        else:
+            *_, lastgroup = self.database['operations'][operation_id]['groups'].keys()
+            if len(self.database['operations'][operation_id]['groups'][lastgroup].keys()) > 1:
+                firstslot, *_, lastslot = self.database['operations'][operation_id]['groups'][lastgroup].keys()
+            else:
+                *_, lastslot = self.database['operations'][operation_id]['groups'][lastgroup].keys()
+                
+        if int(lastslot) >= 26:
+            await ctx.send("Mission is over 25 slots, no select menu will be available.")
+        else:
+            dropdownroles = []
+            for group in group_list:
+                slot_dict = self.database['operations'][operation_id]['groups'][group]
+                for slot in slot_dict:
+                    desc = ""
+                    slotlabel = f"{slot}: {self.database['operations'][operation_id]['groups'][group][slot]}"
+                    desc = group
+                    dropdownroles.append(nextcord.SelectOption(label=slotlabel, description=desc, value=slot))
+            dropdown = Select(placeholder="Slot up!", options=dropdownroles)
+            async def dropdownbackend(ctx):
+                #await ctx.invoke(self.client.get_command('aslot'), ctx=ctx, slot_id=dropdown.values[0])
+                await self.iaslot(ctx=ctx, slot_id=dropdown.values[0])
+                return
+            dropdown.callback = dropdownbackend
+            view.add_item(dropdown)
+            async def buttonbackend(ctx):
+                await self.irslot(ctx=ctx)
+            rslotbutton = Button(label="Unslot", style=nextcord.ButtonStyle.danger)
+            rslotbutton.callback = buttonbackend
+            view.add_item(rslotbutton)
+            
 
         # If previous roster exists, edit it with the embed_roster_message
         if await roster_channel.history().get(author__id = self.client.user.id):
             previous_roster_message = await roster_channel.history().get(author__id = self.client.user.id)
-            await previous_roster_message.edit(embed=embed_roster_message)
+            await previous_roster_message.edit(embed=embed_roster_message, view=view)
         # Else, just send the embed_roster_message
         else:
-            await roster_channel.send(embed=embed_roster_message)
+            await roster_channel.send(embed=embed_roster_message, view=view)
 
         self.saveData()
 
@@ -200,6 +239,69 @@ class autoSlot(commands.Cog):
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
+    #INTERACTION COMPATIBLE ASLOT
+    async def iaslot(self, ctx, slot_id, target=None):
+
+        # Determine Op ID by channel name
+        operation_id = str(ctx.channel)[0]
+
+        # Set Bot Commands as output channel
+        botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
+
+        # Check if operation exists
+        if self.database['operations'].get(operation_id) == None:
+            return await botCommandsChannel.send(f"Operation ID {operation_id} not found.")
+
+        # Pull list of groups and dictionary of roles
+        group_list =[]
+        slot_dict = {}
+        for group in self.database['operations'][operation_id]['groups']:
+            group_list.append(group)
+            slot_dict.update(self.database['operations'][operation_id]['groups'][group])
+
+        # Check if slot exists
+        if slot_dict.get(slot_id) == None:
+            return await botCommandsChannel.send(f"Slot ID {slot_id} not found.")
+        
+        # Check if slot already has user
+
+        if self.database['operations'][operation_id]['assignments'].get(slot_id):
+            return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
+        
+       
+
+        # Check if user already has a slot, (and the slot exists, and the slot doesnt already have a user from the checks above)
+        for slot in self.database.copy()['operations'][operation_id]['assignments']:
+            if ctx.user.id == self.database['operations'][operation_id]['assignments'].get(slot):
+                del self.database['operations'][operation_id]['assignments'][slot]
+                break
+
+        # Check if user already has a slot
+        for slot in self.database['operations'][operation_id]['assignments']:
+            if ctx.user.id == self.database['operations'][operation_id]['assignments'].get(slot):
+                return await botCommandsChannel.send(f"{ctx.author.mention} can only claim one slot at a time.")
+
+        # Update database with new assignment
+        #self.database = self.updateDict(self.database, {'operations' : {operation_id : {'assignments' : {slot_id : user.id}}}})
+        self.database['operations'][operation_id]['assignments'][slot_id] = ctx.user.id
+
+        # Check if roster_category exists, otherwise create it
+        for category in ctx.guild.categories:
+            if category.name == 'rosters':
+                self.roster_category = category
+                break
+        if self.roster_category == None:
+            return await botCommandsChannel.send("No channel can be found for this operation can be found. Have roles been added yet?")
+
+        # Edit embed 
+        roster_channel = nextcord.utils.get(ctx.guild.channels, name=f"{operation_id}-{self.database['operations'][operation_id]['channel_name']}", category=self.roster_category)
+        message = await roster_channel.history().get(author__id = self.client.user.id)
+        await message.edit(embed=self.embedGroupsToRoster(ctx, operation_id, group_list))
+        self.saveData()
+
+        # Notify user
+        await botCommandsChannel.send(f"{ctx.user.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+
     @commands.command(aliases=['deleteslot','delslot','removeslot','rmslot'])
     async def rslot(self, ctx, slot_id=None):
 
@@ -261,6 +363,54 @@ class autoSlot(commands.Cog):
 
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} has removed a user from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+
+    #INTERACTION COMPATIBLE RSLOT
+    async def irslot(self, ctx, slot_id=None):
+        # Determine Op ID by channel name
+        operation_id = str(ctx.channel)[0]
+
+        # Set Bot Commands as output channel
+        botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
+
+        # Delete User Message before Update
+        
+        # Check if operation exists
+        if self.database['operations'].get(operation_id) == None:
+            return await botCommandsChannel.send(f"Operation ID {operation_id} not found.")
+
+        # Pull list of groups and dictionary of roles
+        group_list =[]
+        slot_dict = {}
+        for group in self.database['operations'][operation_id]['groups']:
+            group_list.append(group)
+            slot_dict.update(self.database['operations'][operation_id]['groups'][group])
+
+        # Find user slot
+        for slot in self.database['operations'][operation_id]['assignments']:
+            if ctx.user.id == self.database['operations'][operation_id]['assignments'].get(slot):
+                slot_id = slot
+                break
+        else:
+            return
+        del self.database['operations'][operation_id]['assignments'][slot_id]
+
+        # Check if roster_category exists, otherwise create it
+        for category in ctx.guild.categories:
+            if category.name == 'rosters':
+                self.roster_category = category
+                break
+        if self.roster_category == None:
+            return await botCommandsChannel.send("No channel for this operation can be found. Have roles been added yet?")
+        
+        # Edit embed 
+        roster_channel = nextcord.utils.get(ctx.guild.channels, name=f"{operation_id}-{self.database['operations'][operation_id]['channel_name']}", category=self.roster_category)
+        message = await roster_channel.history().get(author__id = self.client.user.id)
+        await message.edit(embed=self.embedGroupsToRoster(ctx, operation_id, group_list))
+        self.saveData()
+
+        # Notify user
+        await botCommandsChannel.send(f"{ctx.user.mention} has removed themself from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+
 
     
     @commands.command(aliases=['deleteslotall','delslotall','removeslotall','rmslotall','deleteallslots','delallslots','removeallslots','rmallslots'])
