@@ -32,8 +32,10 @@ class autoSlot(commands.Cog):
                 operation_id += 1
 
         # Make channel name that is compatible with discord's channel restrictions
+        exceptioncharacters = ["!","@","#","$","%","^","&","*","(",")","=","+","|","[","]","{","}","`","~",'"',"'","/","?",",","<",">",".",";",":"]
         operation_name_converted = operation_name.replace(" ", "-").lower()
-
+        for character in exceptioncharacters:
+            operation_name_converted = operation_name_converted.replace(character, "")
 
         # Warn user that operation name is converted for discord channel restrictions
         if (operation_name != operation_name_converted):
@@ -463,10 +465,13 @@ class autoSlot(commands.Cog):
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
-    async def deleteOperation(self, ctx):
+    async def deleteOperation(self, ctx, operation_id=None):
 
         # Determine Op ID by channel name
-        operation_id = str(ctx.channel)[0]
+        if operation_id == None:
+            operation_id = str(ctx.channel)[0]
+        else:
+            operation_id = str(operation_id)
 
         # Determine Op ID by channel name
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
