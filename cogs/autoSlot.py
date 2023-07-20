@@ -462,6 +462,27 @@ class autoSlot(commands.Cog):
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} removed all operatives from {self.database['operations'][operation_id]['channel_name']}.")
 
+    @commands.command()
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def feedback(self, ctx, operation_id=None):
+         # Determine Op ID by channel name
+        if operation_id == None:
+            operation_id = str(ctx.channel)[0]
+        else:
+            operation_id = str(operation_id)
+
+        feedbackChannel = nextcord.utils.get(ctx.guild.channels, name=f"operation-feedback")
+        thread = await feedbackChannel.create_thread(name=f"{self.database['operations'][operation_id]['channel_name']}-feedback", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
+        assignments = self.database['operations'][operation_id]['assignments']
+        silentping = ""
+        for member in assignments:
+            silentping += f" {ctx.guild.get_member(assignments.get(member)).mention}"
+
+        mention_message = await thread.send("About to ping members.")
+        await mention_message.edit(silentping)
+        await mention_message.delete()
+        await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \n Give a number out of ten. \n Feedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
