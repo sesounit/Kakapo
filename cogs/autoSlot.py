@@ -481,7 +481,7 @@ class autoSlot(commands.Cog):
         mention_message = await thread.send("About to ping members.")
         await mention_message.edit(silentping)
         await mention_message.delete()
-        await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \n Give a number out of ten. \n Feedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+        await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
 
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
