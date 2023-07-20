@@ -472,16 +472,19 @@ class autoSlot(commands.Cog):
             operation_id = str(operation_id)
 
         feedbackChannel = nextcord.utils.get(ctx.guild.channels, name=f"operation-feedback")
-        thread = await feedbackChannel.create_thread(name=f"{self.database['operations'][operation_id]['channel_name']}-feedback", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
+        thread = await feedbackChannel.create_thread(name=f"{self.database['operations'][operation_id]['name']} Feedback", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
         assignments = self.database['operations'][operation_id]['assignments']
         silentping = ""
         for member in assignments:
             silentping += f" {ctx.guild.get_member(assignments.get(member)).mention}"
-
-        mention_message = await thread.send("About to ping members.")
-        await mention_message.edit(silentping)
-        await mention_message.delete()
-        await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+        if silentping != "":  
+            mention_message = await thread.send("About to ping members.")
+            await mention_message.edit(silentping)
+            await mention_message.delete()
+        if assignments.get('1') == None:
+            await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.")
+        else:
+            await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
 
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
