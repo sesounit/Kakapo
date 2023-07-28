@@ -134,7 +134,7 @@ class autoSlot(commands.Cog):
                     slotlabel = f"{slot}: {self.database['operations'][operation_id]['groups'][group][slot]}"
                     desc = group
                     dropdownroles.append(nextcord.SelectOption(label=slotlabel, description=desc, value=slot))
-            dropdown = Select(placeholder="Slot up!", options=dropdownroles)
+            dropdown = Select(placeholder="Reserve role", options=dropdownroles)
             async def dropdownbackend(ctx):
                 #await ctx.invoke(self.client.get_command('aslot'), ctx=ctx, slot_id=dropdown.values[0])
                 await self.iaslot(ctx=ctx, slot_id=dropdown.values[0])
@@ -179,13 +179,13 @@ class autoSlot(commands.Cog):
         # Check target user if they exist
         if target:
             # If author is not a host, stop execution
-            if ctx.author.roles not in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
-                 return await botCommandsChannel.send('You are not a host. Only hosts can assign another operative to a slot.')
-            # Find and set ctx.author to target
-            ctx.author = ctx.guild.get_member(int(target.translate({ord(i): None for i in '@<>'})))
+            if (len([x for x in ctx.author.roles if x in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]]) > 0):
+                 return await botCommandsChannel.send(f'{ctx.author.mention} is not a host. Only hosts can assign another operative to a slot.')
             # Check if target user exists
             if ctx.author == None:
-                await botCommandsChannel.send("Failed to find user.")
+                await botCommandsChannel.send(f"Failed to find user {ctx.author}.")
+            # Find and set ctx.author to target
+            ctx.author = ctx.guild.get_member(int(target.translate({ord(i): None for i in '@<>'})))
 
         # Check if operation exists
         if self.database['operations'].get(operation_id) == None:
