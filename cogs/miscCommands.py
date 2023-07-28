@@ -55,10 +55,10 @@ class miscCommands(commands.Cog):
     async def version(self, context):
 
         mainEmbed = nextcord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-        mainEmbed.add_field(name="Changes:", value=f"Added the !rename command for automatically generated voicechannels! Use !rename (anything) to change the designation of your channel from 'General' to anything of your choice! \n\nBot will now actually leave VC after a period of inactivity.")
-        mainEmbed.add_field(name="Version Code:", value="v1.1.2", inline=False)
-        mainEmbed.add_field(name="Date Released:", value="June 22nd, 2022", inline=False)
-        mainEmbed.set_footer(text="Kakapo written by Pickle423#0408, Dildo Sagbag#8107, Fletch#0617.")
+        mainEmbed.add_field(name="Changes:", value=f"Added new selector dropdown and button for Roster. \n Updated Roster commands to be more intuitive, including !role as an alias to !slot. \n Bot will now silently add people on the roster to the feedback channel for an op. \n Patched issue with special characters in the roster system. \n Mission upload command for Hosts is now functional. \n ")
+        mainEmbed.add_field(name="Version Code:", value="v1.5.1", inline=False)
+        mainEmbed.add_field(name="Date Released:", value="July 19, 2023", inline=False)
+        mainEmbed.set_footer(text="Kakapo written by pickle423, dildo_sagbag, f13tch, masterchiefcw")
 
         await context.message.channel.send(embed=mainEmbed)
 
