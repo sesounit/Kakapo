@@ -1,4 +1,4 @@
-import nextcord, random
+import nextcord, random, os
 from nextcord.ext import commands, tasks
 #Types of images we'll accept.
 image_types = ["png", "jpeg", "jpg"]
@@ -25,11 +25,12 @@ class warPhotographer(commands.Cog):
             if msg.author == ctx.author:
                 for attachment in msg.attachments:
                     if any(attachment.filename.lower().endswith(image) for image in image_types):
+                        full_filepath = os.path.join(f'{filepath}{ctx.author.display_name}_{attachment.filename.lower()}')
+                        # If filename is unknown, generate a random one
                         if 'unknown' in attachment.filename:
-                            await attachment.save(f'{filepath}{ctx.author.display_name}({random.randrange(1, (9999))}){attachment.filename.lower()}')
-                            await ctx.send("File successfully uploaded!")
-                            return
-                        await attachment.save(f'{filepath}{ctx.author.display_name}{attachment.filename.lower()}')
+                            full_filepath = os.path.join(f'{filepath}{ctx.author.display_name}_({random.randrange(1, (9999))})_{attachment.filename.lower()}')
+                        full_filepath = os.path.expanduser(full_filepath)
+                        await attachment.save(full_filepath)
                         await ctx.send("File successfully uploaded!")
                         return
             else:
