@@ -136,12 +136,13 @@ class autoSlot(commands.Cog):
                     dropdownroles.append(nextcord.SelectOption(label=slotlabel, description=desc, value=slot))
             dropdown = Select(placeholder="Reserve role", options=dropdownroles)
             async def dropdownbackend(ctx):
-                #await ctx.invoke(self.client.get_command('aslot'), ctx=ctx, slot_id=dropdown.values[0])
+                await ctx.response.defer()
                 await self.iaslot(ctx=ctx, slot_id=dropdown.values[0])
                 return
             dropdown.callback = dropdownbackend
             view.add_item(dropdown)
             async def buttonbackend(ctx):
+                await ctx.response.defer()
                 await self.irslot(ctx=ctx)
             rslotbutton = Button(label="Unslot", style=nextcord.ButtonStyle.danger)
             rslotbutton.callback = buttonbackend
@@ -515,20 +516,20 @@ class autoSlot(commands.Cog):
             if category.name == 'rosters':
                 self.roster_category = category
                 break
-
+            
         # Delete operation channel
         if self.roster_category:
             channel = nextcord.utils.get(ctx.guild.channels, name=f"{operation_id}-{self.database['operations'][operation_id]['channel_name']}", category=self.roster_category)
             if channel:
                 await channel.delete()
                 await botCommandsChannel.send(f"{ctx.author.mention} has deleted {self.database['operations'][operation_id]['channel_name']}.")
-
+        deletedunit = self.database['operations'][operation_id]['channel_name']
         # Remove operation channel in database
         del self.database['operations'][operation_id]
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.author.mention} removed operation {self.database['operations'][operation_id]['channel_name']}.")
+        await botCommandsChannel.send(f"{ctx.author.mention} removed operation {deletedunit}.")
 
     # Dumps data to autoSlot.json
     def saveData(self):
