@@ -109,7 +109,7 @@ class autoSlot(commands.Cog):
             #TODO: Move slotname checking to parseStringToGroups instead of embedGroupsToRoster
             self.database['operations'][operation_id]['groups'] = {}
             return await botCommandsChannel.send("Please limit the length of a slotname to 25, the number of slots in a single group to 20, and the number of groups to 10.")
-        view = View()
+        view = View(timeout=None)
         if len(self.database['operations'][operation_id]['groups']) > 1:
             firstgroup, *_, lastgroup = self.database['operations'][operation_id]['groups'].keys()
             if len(self.database['operations'][operation_id]['groups'][lastgroup].keys()) > 1:
