@@ -7,13 +7,8 @@ class missionUpload(commands.Cog):
     def __init__(self, client):
         self.client = client
     
-    async def cog_check(self, ctx):
-        #Check if user has requisite roles
-        if ctx.author.roles in ["Operations Command", "Command Consultant", "Campaign Host", "Operation Host"]:
-            return True
-        return False
-
     @commands.command(aliases=['serverUpload', 'um', 'su'])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def uploadMission(self, ctx):
         messages = await ctx.channel.history(limit=2).flatten()
         if len(ctx.message.attachments) < 2 and len(ctx.message.attachments) > 0:
