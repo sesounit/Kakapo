@@ -466,14 +466,22 @@ class autoSlot(commands.Cog):
     @commands.command()
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def feedback(self, ctx, operation_id=None):
-         # Determine Op ID by channel name
+        # Determine Op ID by channel name
         if operation_id == None:
             operation_id = str(ctx.channel)[0]
         else:
             operation_id = str(operation_id)
-
+        # Find the feedback channel and then create a thread for the operation
         feedbackChannel = nextcord.utils.get(ctx.guild.channels, name=f"operation-feedback")
         thread = await feedbackChannel.create_thread(name=f"{self.database['operations'][operation_id]['name']} Feedback", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
+        '''
+        Retrieve the assignments for given operation ID and construct a "silentping"
+        The "silentping" variable is a string constructed by a for-loop with the discord member.mention objects for each member present in the roster.
+        The first stage iterates through the members in the assignment list, and adds their member.mention objects to the string.
+        If the mission roster is not empty, a dummy message will be sent and then edited with the "silentping" variable. Since the message was edited
+        with the member.mention objects, rather than sent with them, the mentioned members will be added to the thread without actually being "pinged" by discord.
+        The message will then be immediately deleted for cleanliness and to create the illusion that no one was ever pinged.
+        '''
         assignments = self.database['operations'][operation_id]['assignments']
         silentping = ""
         for member in assignments:
@@ -482,6 +490,8 @@ class autoSlot(commands.Cog):
             mention_message = await thread.send("About to ping members.")
             await mention_message.edit(silentping)
             await mention_message.delete()
+        # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
+        # (Since the silentping message was already deleted by this point.)
         if assignments.get('1') == None:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.")
         else:
@@ -498,7 +508,7 @@ class autoSlot(commands.Cog):
         else:
             operation_id = str(operation_id)
 
-        # Determine Op ID by channel name
+        # Find bot-commands channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
 
         # Delete User Message before Update
