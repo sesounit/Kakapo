@@ -369,7 +369,7 @@ class autoSlot(commands.Cog):
 
     #INTERACTION COMPATIBLE RSLOT
     async def irslot(self, ctx, slot_id=None):
-        
+
         # Determine Op ID by channel name
         operation_id = str(ctx.channel)[0]
 
@@ -576,7 +576,7 @@ class autoSlot(commands.Cog):
                 # Replace all new lines with the newline found in SQF.
                 convertSpaces = message.content.replace("\n","<br/>")
                 # Append the older messages to the beginning of the string as the ctx.history() command works from newest to oldest but Briefings are read top to bottom.
-                fullString = convertSpaces + "</br></br>" + fullString
+                fullString = convertSpaces + "<br/><br/>" + fullString
                 
             #await ctx.send(fullString)
             fullString = fileHeader + fullString + fileFooter
