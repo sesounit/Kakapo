@@ -163,10 +163,24 @@ class autoSlot(commands.Cog):
         await botCommandsChannel.send(f"{ctx.author.mention} has added slots to {self.database['operations'][operation_id]['channel_name']}.")
 
     @commands.command(aliases=['assignslot','takeslot', 'claimslot', 'cslot', 'tslot','slot','role'])
-    async def aslot(self, ctx, slot_id, target=None):
+    async def aslot(self, ctx, slot_id, target=None, oldtarget=None):
 
-        # Determine Op ID by channel name
-        operation_id = str(ctx.channel)[0]
+        # Determine if an operation id is specified in command request (support for legacy method)
+        if target == None:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
+        elif target.isdigit() and oldtarget == None:
+            operation_id = slot_id
+            slot_id = target
+            target = None
+        elif oldtarget != None:
+            operation_id = slot_id
+            slot_id = target
+            target = oldtarget
+        else:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
+
 
         # Set Bot Commands as output channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
