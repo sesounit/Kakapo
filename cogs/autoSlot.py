@@ -538,11 +538,14 @@ class autoSlot(commands.Cog):
             if msg.author not in operativesR:
                 operativesR.append(msg.author)
         ping = "Operatives yet to provide feedback: \n"
+        #Variable for formatting purposes, boolean for if it's the first person in the list.
+        i = False
         if operatives != []:
             for op in operatives:
                 if op not in operativesR:
-                    if op == operatives[0]:
+                    if i == False:
                         ping += f"{op.mention}"
+                        i = True
                     else:
                         ping += f", {op.mention}"
             if ping == "Operatives yet to provide feedback: \n":
