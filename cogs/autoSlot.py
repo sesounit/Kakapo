@@ -7,7 +7,7 @@ from nextcord.ui import Select, Button, View
 class autoSlot(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.database = {'operations' : {}}
+        self.database = {'operations' : {}, 'threads' : {}}
         self.roster_category = None
 
     @commands.Cog.listener()
@@ -16,6 +16,7 @@ class autoSlot(commands.Cog):
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json', 'r') as json_file:
                 self.database = json.load(json_file)
+                print(self.database)
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -514,12 +515,47 @@ class autoSlot(commands.Cog):
             mention_message = await thread.send("About to ping members.")
             await mention_message.edit(silentping)
             await mention_message.delete()
+        self.database['threads'].update({str(thread.id) : operation_id})
+        self.saveData()
         # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
         # (Since the silentping message was already deleted by this point.)
         if assignments.get('1') == None:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.")
         else:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+
+    @commands.command(aliases=["remind"])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def remindFeedback(self, ctx, operation_id=None):
+        messages = await ctx.message.channel.history().flatten()
+        operation_id = self.database['threads'].get(str(ctx.message.channel.id))
+        if operation_id == None:
+            print(operation_id)
+            print(self.database)
+            return await ctx.send("No operation found.")
+        operatives = []
+        operativesR = []
+        for op in self.database['operations'][operation_id]['assignments']:
+            operatives.append(ctx.guild.get_member(self.database['operations'][operation_id]['assignments'].get(op)))
+            print(operatives)
+        for msg in messages:
+            if msg.author not in operativesR:
+                operativesR.append(msg.author)
+        ping = "Operatives yet to provide feedback: \n"
+        if operatives != []:
+            for op in operatives:
+                if op not in operativesR:
+                    if op == operatives[0]:
+                        ping += f"{op.mention}"
+                    else:
+                        ping += f", {op.mention}"
+            if ping == "Operatives yet to provide feedback: \n":
+                await ctx.send("All operatives have provided feedback.")
+                return
+            await ctx.send(ping)
+        else:
+            await ctx.send("No operatives found.")
+
 
     # Briefing Channel
     @commands.command(aliases=['ofb'])
@@ -648,6 +684,12 @@ class autoSlot(commands.Cog):
                 await channel.delete()
                 await botCommandsChannel.send(f"{ctx.author.mention} has deleted {self.database['operations'][operation_id]['channel_name']}.")
         deletedunit = self.database['operations'][operation_id]['channel_name']
+
+        #Check for feedback threads associated with the operation.
+        for key in self.database['threads']:
+            if self.database['threads'][key] == operation_id:
+                del self.database['threads'][key]
+                #It would be more efficient to break here and not continue iterating through the threads, however it is possible for one operation to have multiple feedback channels. :/
 
         # Remove operation channel in database
         del self.database['operations'][operation_id]
