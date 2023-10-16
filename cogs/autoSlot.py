@@ -16,7 +16,6 @@ class autoSlot(commands.Cog):
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json', 'r') as json_file:
                 self.database = json.load(json_file)
-                print(self.database)
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -530,14 +529,11 @@ class autoSlot(commands.Cog):
         messages = await ctx.message.channel.history().flatten()
         operation_id = self.database['threads'].get(str(ctx.message.channel.id))
         if operation_id == None:
-            print(operation_id)
-            print(self.database)
             return await ctx.send("No operation found.")
         operatives = []
         operativesR = []
         for op in self.database['operations'][operation_id]['assignments']:
             operatives.append(ctx.guild.get_member(self.database['operations'][operation_id]['assignments'].get(op)))
-            print(operatives)
         for msg in messages:
             if msg.author not in operativesR:
                 operativesR.append(msg.author)
