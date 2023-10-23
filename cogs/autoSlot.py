@@ -528,9 +528,11 @@ class autoSlot(commands.Cog):
     async def remindFeedback(self, ctx, operation_id=None, dm=""):
         if isinstance(dm, int):
             operation_id = dm
-        elif dm == "dm":
-            dm = True
-        if operation_id == "dm":
+        elif dm == "ping":
+            dm = False
+        if operation_id == "ping":
+            dm = False
+        if dm == "":
             dm = True
         messages = await ctx.message.channel.history().flatten()
         operation_id = self.database['threads'].get(str(ctx.message.channel.id))
