@@ -525,7 +525,13 @@ class autoSlot(commands.Cog):
 
     @commands.command(aliases=["remind"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
-    async def remindFeedback(self, ctx, operation_id=None):
+    async def remindFeedback(self, ctx, operation_id=None, dm=""):
+        if isinstance(dm, int):
+            operation_id = dm
+        elif dm == "dm":
+            dm = True
+        if operation_id == "dm":
+            dm = True
         messages = await ctx.message.channel.history().flatten()
         operation_id = self.database['threads'].get(str(ctx.message.channel.id))
         if operation_id == None:
@@ -549,8 +555,14 @@ class autoSlot(commands.Cog):
                     else:
                         ping += f", {op.mention}"
             if ping == "Operatives yet to provide feedback: \n":
+                if dm == True:
+                    await ctx.author.send("All operatives have provided feedback.")
+                    return
                 await ctx.send("All operatives have provided feedback.")
                 return
+            if dm == True:
+                    await ctx.author.send(ping)
+                    return
             await ctx.send(ping)
         else:
             await ctx.send("No operatives found.")
