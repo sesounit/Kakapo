@@ -1,8 +1,18 @@
 import nextcord, wavelink, time
 from nextcord.ext import commands, tasks
+import re
 
 p = None
 i = 0
+
+class musicHelper:
+
+    # Convert a youtu.be link into a youtube.com link by splitting the original youtu.be link on slashes, 
+    # and then on ? to isolate the video id before putting it back into a youtube.com link.
+    def convertShort(search):
+        return (f"https://www.youtube.com/watch?v={search.split('/')[3].split('?')[0]}")
+
+        
 
 class Music(commands.Cog):
     """Music cog to hold Wavelink related commands and listeners."""
@@ -68,7 +78,7 @@ class Music(commands.Cog):
         i = i + 1
  
     @commands.command(aliases=['continue','resume','re','res', 'p'])
-    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack = None):
+    async def play(self, ctx: commands.Context, *, search: str):
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
@@ -80,11 +90,16 @@ class Music(commands.Cog):
                 await ctx.send(f'**Joined `{ctx.author.voice.channel}`**')
             else:
                 vc: wavelink.Player = ctx.voice_client
+            
+            if "https://youtu.be/" in search:
+                search = musicHelper.convertShort(search)
+            search = await wavelink.YouTubeTrack.search(search)
+            search = search[0]
 
             if vc.queue.is_empty and not vc.is_playing():
                 await vc.play(search)
                 await ctx.message.add_reaction('▶️')
-                await ctx.send(f'**Now playing:** `{vc.track.title}`')
+                await ctx.send(f'**Now playing:** `{search.title}`')
             else:
                 await vc.queue.put_wait(search)
                 await ctx.message.add_reaction('▶️')
