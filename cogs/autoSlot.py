@@ -7,7 +7,7 @@ from nextcord.ui import Select, Button, View
 class autoSlot(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.database = {'operations' : {}}
+        self.database = {'operations' : {}, 'threads' : {}}
         self.roster_category = None
 
     @commands.Cog.listener()
@@ -163,10 +163,24 @@ class autoSlot(commands.Cog):
         await botCommandsChannel.send(f"{ctx.author.mention} has added slots to {self.database['operations'][operation_id]['channel_name']}.")
 
     @commands.command(aliases=['assignslot','takeslot', 'claimslot', 'cslot', 'tslot','slot','role'])
-    async def aslot(self, ctx, slot_id, target=None):
+    async def aslot(self, ctx, slot_id, target=None, oldtarget=None):
 
-        # Determine Op ID by channel name
-        operation_id = str(ctx.channel)[0]
+        # Determine if an operation id is specified in command request (support for legacy method)
+        if target == None:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
+        elif target.isdigit() and oldtarget == None:
+            operation_id = slot_id
+            slot_id = target
+            target = None
+        elif oldtarget != None:
+            operation_id = slot_id
+            slot_id = target
+            target = oldtarget
+        else:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
+
 
         # Set Bot Commands as output channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
@@ -369,6 +383,7 @@ class autoSlot(commands.Cog):
 
     #INTERACTION COMPATIBLE RSLOT
     async def irslot(self, ctx, slot_id=None):
+
         # Determine Op ID by channel name
         operation_id = str(ctx.channel)[0]
 
@@ -415,7 +430,7 @@ class autoSlot(commands.Cog):
         await botCommandsChannel.send(f"{ctx.user.mention} has removed themself from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
 
-    
+    # Remove All
     @commands.command(aliases=['deleteslotall','delslotall','removeslotall','rmslotall','deleteallslots','delallslots','removeallslots','rmallslots'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def rslotAll(self, ctx):
@@ -463,17 +478,34 @@ class autoSlot(commands.Cog):
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} removed all operatives from {self.database['operations'][operation_id]['channel_name']}.")
 
+    # Feedback Channel
     @commands.command()
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def feedback(self, ctx, operation_id=None):
-         # Determine Op ID by channel name
+
+        # Delete User Message before Update
+        try:
+            await ctx.message.delete()
+        except:
+            print()
+
+        # Determine Op ID by channel name
         if operation_id == None:
             operation_id = str(ctx.channel)[0]
         else:
             operation_id = str(operation_id)
 
+        # Find the feedback channel and then create a thread for the operation
         feedbackChannel = nextcord.utils.get(ctx.guild.channels, name=f"operation-feedback")
         thread = await feedbackChannel.create_thread(name=f"{self.database['operations'][operation_id]['name']} Feedback", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
+        '''
+        Retrieve the assignments for given operation ID and construct a "silentping"
+        The "silentping" variable is a string constructed by a for-loop with the discord member.mention objects for each member present in the roster.
+        The first stage iterates through the members in the assignment list, and adds their member.mention objects to the string.
+        If the mission roster is not empty, a dummy message will be sent and then edited with the "silentping" variable. Since the message was edited
+        with the member.mention objects, rather than sent with them, the mentioned members will be added to the thread without actually being "pinged" by discord.
+        The message will then be immediately deleted for cleanliness and to create the illusion that no one was ever pinged.
+        '''
         assignments = self.database['operations'][operation_id]['assignments']
         silentping = ""
         for member in assignments:
@@ -482,10 +514,151 @@ class autoSlot(commands.Cog):
             mention_message = await thread.send("About to ping members.")
             await mention_message.edit(silentping)
             await mention_message.delete()
+        self.database['threads'].update({str(thread.id) : operation_id})
+        self.saveData()
+        # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
+        # (Since the silentping message was already deleted by this point.)
         if assignments.get('1') == None:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.")
         else:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+
+    @commands.command(aliases=["remind"])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def remindFeedback(self, ctx, operation_id=None, dm=""):
+        if isinstance(dm, int):
+            operation_id = dm
+        elif dm == "ping":
+            dm = False
+        if operation_id == "ping":
+            dm = False
+        if dm == "":
+            dm = True
+        messages = await ctx.message.channel.history().flatten()
+        operation_id = self.database['threads'].get(str(ctx.message.channel.id))
+        if operation_id == None:
+            return await ctx.send("No operation found.")
+        operatives = []
+        operativesR = []
+        for op in self.database['operations'][operation_id]['assignments']:
+            operatives.append(ctx.guild.get_member(self.database['operations'][operation_id]['assignments'].get(op)))
+        for msg in messages:
+            if msg.author not in operativesR:
+                operativesR.append(msg.author)
+        ping = "Operatives yet to provide feedback: \n"
+        #Variable for formatting purposes, boolean for if it's the first person in the list.
+        i = False
+        if operatives != []:
+            for op in operatives:
+                if op not in operativesR:
+                    if i == False:
+                        ping += f"{op.mention}"
+                        i = True
+                    else:
+                        ping += f", {op.mention}"
+            if ping == "Operatives yet to provide feedback: \n":
+                if dm == True:
+                    await ctx.author.send("All operatives have provided feedback.")
+                    return
+                await ctx.send("All operatives have provided feedback.")
+                return
+            if dm == True:
+                    await ctx.author.send(ping)
+                    return
+            await ctx.send(ping)
+        else:
+            await ctx.send("No operatives found.")
+
+
+    # Briefing Channel
+    @commands.command(aliases=['ofb'])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def oneoffbriefing(self, ctx, operation_id=None):
+
+        # Delete User Message before Update
+        try:
+            await ctx.message.delete()
+        except:
+            print()
+
+        # Very similar to the Feedback channel without needing to mention leadership as not everyone may want to ping leadership for the briefing
+        # Determine Op ID by channel name
+        if operation_id == None:
+            operation_id = str(ctx.channel)[0]
+        else:
+            operation_id = str(operation_id)
+
+        # Find the briefing channel and then create a thread for the operation
+        briefingChannel = nextcord.utils.get(ctx.guild.channels, name=f"one-off-briefings")
+        thread = await briefingChannel.create_thread(name=f"{self.database['operations'][operation_id]['name']} Briefing", message=None, auto_archive_duration=60, type=nextcord.ChannelType.public_thread, reason=None)
+
+        # Ping the sender and the delete message (Almost always the host) for easy access to channel
+        host_message = await thread.send(f"{ctx.author.mention}")
+        await host_message.delete()
+        '''
+        Retrieve the assignments for given operation ID and construct a "silentping"
+        The "silentping" variable is a string constructed by a for-loop with the discord member.mention objects for each member present in the roster.
+        The first stage iterates through the members in the assignment list, and adds their member.mention objects to the string.
+        If the mission roster is not empty, a dummy message will be sent and then edited with the "silentping" variable. Since the message was edited
+        with the member.mention objects, rather than sent with them, the mentioned members will be added to the thread without actually being "pinged" by discord.
+        The message will then be immediately deleted for cleanliness and to create the illusion that no one was ever pinged.
+        '''
+        assignments = self.database['operations'][operation_id]['assignments']
+        silentping = ""
+        for member in assignments:
+            silentping += f" {ctx.guild.get_member(assignments.get(member)).mention}"
+        if silentping != "":  
+            mention_message = await thread.send("About to ping members.")
+            await mention_message.edit(silentping)
+            await mention_message.delete()
+        '''
+        Request whether the user would want the "SESO Standard Briefing Template" or build their own.
+        TODO: 
+
+        '''
+
+    # Convert the Briefing messages to one useful in Arma
+    @commands.command(aliases=['cb'])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def convertBriefing(self, ctx):
+        botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
+        
+        # Delete User Message before Update
+        try:
+            await ctx.message.delete()
+        except:
+            print()
+
+        if "Briefing" in str(ctx.channel):
+            fileHeader = "player setDiarySubjectPicture [\"Diary\", \"a3\\ui_f\\data\\igui\\cfg\\simpletasks\\types\\whiteboard_ca.paa\"];\nprivate _intelText = player createDiaryRecord [\"Diary\", [\"Briefing\",\"\n"
+            fileFooter = "\"\n]];"
+            fullString = ""
+
+            # Retrieve channel history
+            async for message in ctx.history():
+                # Replace all new lines with the newline found in SQF.
+                convertSpaces = message.content.replace("\n","<br/>")
+                # Append the older messages to the beginning of the string as the ctx.history() command works from newest to oldest but Briefings are read top to bottom.
+                fullString = convertSpaces + "<br/><br/>" + fullString
+                
+            #await ctx.send(fullString)
+            fullString = fileHeader + fullString + fileFooter
+            # Write file
+            with open("diaryRecords.sqf", "w") as file:
+                file.write(fullString)
+            
+            # Send File To Discord
+            with open('diaryRecords.sqf', 'rb') as fp:
+                await botCommandsChannel.send(f"{ctx.author.mention}", file=nextcord.File(fp, 'diaryRecords.sqf'))
+
+            # Clean up file
+            os.remove("diaryRecords.sqf")
+
+        else:
+            # Notify user that it was wrong in the wrong channel
+            
+            await botCommandsChannel.send(f"{ctx.author.mention} Not a valid Briefing channel to convert.")
+
 
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
@@ -498,7 +671,7 @@ class autoSlot(commands.Cog):
         else:
             operation_id = str(operation_id)
 
-        # Determine Op ID by channel name
+        # Find bot-commands channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
 
         # Delete User Message before Update
@@ -524,6 +697,13 @@ class autoSlot(commands.Cog):
                 await channel.delete()
                 await botCommandsChannel.send(f"{ctx.author.mention} has deleted {self.database['operations'][operation_id]['channel_name']}.")
         deletedunit = self.database['operations'][operation_id]['channel_name']
+
+        #Check for feedback threads associated with the operation.
+        for key in self.database['threads']:
+            if self.database['threads'][key] == operation_id:
+                del self.database['threads'][key]
+                #It would be more efficient to break here and not continue iterating through the threads, however it is possible for one operation to have multiple feedback channels. :/
+
         # Remove operation channel in database
         del self.database['operations'][operation_id]
         self.saveData()
