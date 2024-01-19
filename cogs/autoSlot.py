@@ -678,12 +678,22 @@ class autoSlot(commands.Cog):
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def modlist(self, ctx, operation_id, modlist):
         if self.database['operations'].get(operation_id) == None: return await ctx.send(f"Operation ID {operation_id} not found.")
-        if "https://discord.com/channels/" not in modlist: return await ctx.send("Modlist link appears invalid. \n\nPlease make sure you copied the message link in the discord desktop client.")
+        if "https://discord.com/channels/" not in modlist: return await ctx.send("Modlist link appears invalid.")
         
         self.database['operations'][operation_id]['modlistlink'] = modlist
 
         self.saveData()
-        return await ctx.send(f"Updated modlist link for {operation_id}")
+        return await ctx.send(f"Updated modlist link for {operation_id} \nPlease re-add slots if the roster already exists.")
+    
+    @commands.command(aliases=['time','ut'])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def updateTime(self, ctx, operation_id, timestamp: int):
+        if self.database['operations'].get(operation_id) == None: return await ctx.send(f"Operation ID {operation_id} not found.")
+        
+        self.database['operations'][operation_id]['operation_timestamp'] = timestamp
+
+        self.saveData()
+        return await ctx.send(f"Updated timestamp for {operation_id} to <t:{timestamp}:F> \nPlease re-add slots if the roster already exists.")
 
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
