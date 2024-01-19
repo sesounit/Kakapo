@@ -221,8 +221,6 @@ class autoSlot(commands.Cog):
 
         if self.database['operations'][operation_id]['assignments'].get(slot_id):
             return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
-        
-       
 
         # Check if user already has a slot, (and the slot exists, and the slot doesnt already have a user from the checks above)
         for slot in self.database.copy()['operations'][operation_id]['assignments']:
@@ -254,7 +252,8 @@ class autoSlot(commands.Cog):
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.author.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.author.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
     #INTERACTION COMPATIBLE ASLOT
     async def iaslot(self, ctx, slot_id, target=None):
@@ -317,13 +316,22 @@ class autoSlot(commands.Cog):
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.user.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.user.mention} has taken slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
     @commands.command(aliases=['deleteslot','delslot','removeslot','rmslot'])
-    async def rslot(self, ctx, slot_id=None):
-
-        # Determine Op ID by channel name
-        operation_id = str(ctx.channel)[0]
+    async def rslot(self, ctx, slot_id=None, target=None):
+         # Determine if an operation id is specified in command request (support for legacy method)
+        if target == None:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
+        elif target.isdigit():
+            operation_id = slot_id
+            slot_id = target
+            target = None
+        else:
+            # Determine Op ID by channel name
+            operation_id = str(ctx.channel)[0]
 
         # Set Bot Commands as output channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
@@ -379,7 +387,8 @@ class autoSlot(commands.Cog):
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.author.mention} has removed a user from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.author.mention} has removed a user from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
     #INTERACTION COMPATIBLE RSLOT
     async def irslot(self, ctx, slot_id=None):
@@ -427,7 +436,8 @@ class autoSlot(commands.Cog):
         self.saveData()
 
         # Notify user
-        await botCommandsChannel.send(f"{ctx.user.mention} has removed themself from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.user.mention} has removed themself from slot {slot_id} in {self.database['operations'][operation_id]['channel_name']}.")
 
 
     # Remove All
@@ -526,6 +536,7 @@ class autoSlot(commands.Cog):
     @commands.command(aliases=["remind"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def remindFeedback(self, ctx, operation_id=None, dm=""):
+        # I'm sorry for this, I should've commented this when it was first made. Just know we can't move it around, this looks awful but makes it easier for the user.
         if isinstance(dm, int):
             operation_id = dm
         elif dm == "ping":
@@ -699,7 +710,7 @@ class autoSlot(commands.Cog):
         deletedunit = self.database['operations'][operation_id]['channel_name']
 
         #Check for feedback threads associated with the operation.
-        for key in self.database['threads']:
+        for key in self.database['threads'].copy():
             if self.database['threads'][key] == operation_id:
                 del self.database['threads'][key]
                 #It would be more efficient to break here and not continue iterating through the threads, however it is possible for one operation to have multiple feedback channels. :/
