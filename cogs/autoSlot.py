@@ -19,11 +19,15 @@ class autoSlot(commands.Cog):
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
-    async def addOperation(self, ctx, operation_name: str, operation_timestamp: int):
+    async def addOperation(self, ctx, operation_name: str, operation_timestamp: int, modlist = None):
 
         # Set Bot Commands as output channel
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
 
+        if modlist == None:
+            await ctx.send("You have not specified a modlist, no modlist will be present on the roster. \n\nIf you'd like to add a modlist now, you may use the !modlist command.")
+        else:
+            if "https://discord.com/channels/" not in modlist: return await ctx.send("Modlist link appears invalid. \n\nPlease make sure you copied the message link in the discord desktop client.")
         operation_id = 1
         while operation_id < 1000:
             if str(operation_id) not in self.database['operations'] :
@@ -47,7 +51,7 @@ class autoSlot(commands.Cog):
             #return
 
         # Add operation to database
-        self.database['operations'].update({str(operation_id) : {'groups' : {}, 'assignments' : {}, 'channel_name' : operation_name_converted, 'name' : operation_name,'author' : ctx.author.id, 'operation_timestamp' : operation_timestamp} })
+        self.database['operations'].update({str(operation_id) : {'groups' : {}, 'assignments' : {}, 'channel_name' : operation_name_converted, 'name' : operation_name,'author' : ctx.author.id, 'operation_timestamp' : operation_timestamp,'modlistlink' : modlist} })
         self.saveData()
 
         # Notify user
@@ -670,6 +674,26 @@ class autoSlot(commands.Cog):
             
             await botCommandsChannel.send(f"{ctx.author.mention} Not a valid Briefing channel to convert.")
 
+    @commands.command()
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def modlist(self, ctx, operation_id, modlist):
+        if self.database['operations'].get(operation_id) == None: return await ctx.send(f"Operation ID {operation_id} not found.")
+        if "https://discord.com/channels/" not in modlist: return await ctx.send("Modlist link appears invalid.")
+        
+        self.database['operations'][operation_id]['modlistlink'] = modlist
+
+        self.saveData()
+        return await ctx.send(f"Updated modlist link for {operation_id} \nPlease re-add slots if the roster already exists.")
+    
+    @commands.command(aliases=['time','ut'])
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    async def updateTime(self, ctx, operation_id, timestamp: int):
+        if self.database['operations'].get(operation_id) == None: return await ctx.send(f"Operation ID {operation_id} not found.")
+        
+        self.database['operations'][operation_id]['operation_timestamp'] = timestamp
+
+        self.saveData()
+        return await ctx.send(f"Updated timestamp for {operation_id} to <t:{timestamp}:F> \nPlease re-add slots if the roster already exists.")
 
     # Remove operation
     @commands.command(aliases=['deloperation','delop','removeoperation','rmoperation','rmop'])
@@ -733,7 +757,11 @@ class autoSlot(commands.Cog):
         assignments = self.database['operations'][operation_id]['assignments']
         long_operation_timestamp = "<t:" + str(self.database['operations'][operation_id]['operation_timestamp']) + ":F>" #nextcord.utils.format_dt(self.database['operations'][operation_id]['operation_timestamp'], style="F")
         relative_operation_timestamp = "<t:" + str(self.database['operations'][operation_id]['operation_timestamp']) + ":R>" #nextcord.utils.format_dt(self.database['operations'][operation_id]['operation_timestamp'], style="R")
-        slot_embed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']}", description=f"By: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention}\n {long_operation_timestamp}, {relative_operation_timestamp}\n Operation ID: {operation_id}", color=0x0E8643)
+        if self.database['operations'][operation_id]['modlistlink'] != None: 
+            modlist = self.database['operations'][operation_id]['modlistlink']
+            slot_embed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']}", description=f"By: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention}\n {long_operation_timestamp}, {relative_operation_timestamp}\n {modlist}\n Operation ID: {operation_id}", color=0x0E8643)
+        else:
+            slot_embed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']}", description=f"By: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention}\n {long_operation_timestamp}, {relative_operation_timestamp}\n Operation ID: {operation_id}", color=0x0E8643)
         if len(group_dict) > 10:
             return None
         for group in group_dict:
