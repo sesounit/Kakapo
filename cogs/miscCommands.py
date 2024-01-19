@@ -55,7 +55,7 @@ class miscCommands(commands.Cog):
     async def version(self, context):
 
         mainEmbed = nextcord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-        mainEmbed.add_field(name="Changes:", value=f"Roster selection will now silent ping you, force slot and force rslot fixes. !delop will now properly delete an op. \nNext update will likely be big :).")
+        mainEmbed.add_field(name="Changes:", value=f"Roster selection will now silent ping you, force slot and force rslot fixes. !delop will now properly delete an op. Hosts can now put a modlist link in their rosters. \nNext update will likely be big :).")
         mainEmbed.add_field(name="Version Code:", value="v1.5.2", inline=False)
         mainEmbed.add_field(name="Date Released:", value="January 19, 2023", inline=False)
         mainEmbed.set_footer(text="Kakapo written by pickle423, dildo_sagbag, masterchiefcw, f13tch")
