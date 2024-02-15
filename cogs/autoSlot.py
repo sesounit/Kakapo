@@ -16,6 +16,7 @@ class autoSlot(commands.Cog):
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json', 'r') as json_file:
                 self.database = json.load(json_file)
+        self.FormFeedBack = self.client.get_cog("FormFeedBack")
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -530,12 +531,31 @@ class autoSlot(commands.Cog):
             await mention_message.delete()
         self.database['threads'].update({str(thread.id) : operation_id})
         self.saveData()
+
+        #Create the button to spawn the form.
+        view = View(timeout=None)
+        async def formButtonBackend(interaction):
+            await self.FormFeedBack.serveForm(interaction, self.findOperationByName(interaction.channel.name.removesuffix(" Feedback")))
+        formButton = Button(label="Feedback Form", style=nextcord.ButtonStyle.success)
+        formButton.callback = formButtonBackend
+        view.add_item(formButton)
         # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
         # (Since the silentping message was already deleted by this point.)
+        # The commented out portion is the old method.
+        '''
         if assignments.get('1') == None:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.")
         else:
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
+        '''
+        if assignments.get('1') == None:
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.", color=0x0E8643)
+        else:
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}", color=0x0E8643)
+        await thread.send(embed = feedbackEmbed, view=view)
+        
+
+        
 
     @commands.command(aliases=["remind"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -745,6 +765,12 @@ class autoSlot(commands.Cog):
 
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} removed operation {deletedunit}.")
+
+    def findOperationByName(self, operationName):
+        for operation in self.database['operations']:
+            if self.database['operations'][operation]['name'] == operationName:
+                return operation
+        return None
 
     # Dumps data to autoSlot.json
     def saveData(self):
