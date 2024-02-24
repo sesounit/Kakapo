@@ -18,7 +18,7 @@ class autoVoiceChannels(commands.Cog):
         self.created_voice_channels = [channel for server in self.client.guilds for channel in server.voice_channels if ('#' in channel.name)]
 
         # Delete any created_voice_channels with no current members
-        for created_voice_channel in self.created_voice_channels:
+        for created_voice_channel in self.created_voice_channels.copy():
             if len(created_voice_channel.members) < 1:
                 await created_voice_channel.delete()
                 self.created_voice_channels.remove(created_voice_channel)
