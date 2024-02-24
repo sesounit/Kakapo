@@ -15,11 +15,12 @@ class hostTools(commands.Cog):
     async def on_ready(self):
         #Set global variable for channels
         # Because of the funny icons in Dogegs we have to use the ID of the channel 451858500784619550
+        # Because of the funny icons in Monkeys we have to use the ID of the channel 911066596456415269
         global hostNotificationsChannel
         global dogegsChannel
         global botCommandsChannel 
         botCommandsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"bot-commands")
-        dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=911066596456415269)
+        dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=451858500784619550)
         hostNotificationsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"host-notifications")
         #Check and load pre-existing roster JSON
         if os.path.exists('autoSlot.json'):
