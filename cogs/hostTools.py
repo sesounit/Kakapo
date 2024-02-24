@@ -15,10 +15,12 @@ class hostTools(commands.Cog):
     async def on_ready(self):
         #Set global variable for channels
         # Because of the funny icons in Dogegs we have to use the ID of the channel 451858500784619550
+        global hostNotificationsChannel
         global dogegsChannel
         global botCommandsChannel 
         botCommandsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"bot-commands")
         dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=911066596456415269)
+        hostNotificationsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"host-notifications")
         #Check and load pre-existing roster JSON
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json', 'r') as json_file:
@@ -71,6 +73,7 @@ class hostTools(commands.Cog):
 
     @commands.command(name = "addReminder", help = "Schedule a reminder to ping a Host")
     async def addReminder(self, ctx, user, notifTime, notifMessage = None, operation_id = None):
+        
         ''' 
         Created 1-19-2024 by Chief
         Updated 1-22-2024 by Chief
@@ -111,8 +114,11 @@ class hostTools(commands.Cog):
         # Add row to json with input data and save the file
         self.database2['notifications'].update({str(notificationID) : {'User': user, 'Time': notifTime, 'Message': notifMessage, 'Operation ID': operation_id}})
         saveJsonData(self)
-        formattedTime = "<t:" + notifTime + ":F>"
-        await botCommandsChannel.send(f"Notification created for {user} at {formattedTime} with message {notifMessage}")
+        formattedTime = "<t:" + str(notifTime) + ":F>"
+        if (operation_id is not None):
+            await hostNotificationsChannel.send(f"Notification created for {user} at {formattedTime} with message \"{notifMessage}\" for operation ID {operation_id}")
+        else:
+            await botCommandsChannel.send(f"Notification created for {user} at {formattedTime} with message {notifMessage}")
 
         
     @commands.command(name = "deleteReminder", help = "Delete a reminder")
@@ -159,7 +165,7 @@ class hostTools(commands.Cog):
         # Loop through notification DB and send the list to the bots command channel
         for notificationID in self.database2['notifications'].copy():
             user = ctx.guild.get_member(int(self.database2['notifications'][notificationID]['User'].translate({ord(i): None for i in '@<>'})))
-            time = "<t:" + self.database2['notifications'][notificationID]['Time'] + ":F>"
+            time = "<t:" + str(self.database2['notifications'][notificationID]['Time']) + ":F>"
             await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
 
 
@@ -181,7 +187,10 @@ class hostTools(commands.Cog):
         # Every 60 seconds loop through the notification DB by creating a temp copy of the DB and comparing the timestamp of the current time to the time in the DB
         for notificationID in self.database2['notifications'].copy():
             if datetime.utcfromtimestamp(int(self.database2['notifications'][notificationID]['Time'])) < currentUTCTime:
-                await botCommandsChannel.send(f"{self.database2['notifications'][notificationID]['User']} {self.database2['notifications'][notificationID]['Message']}")
+                if (self.database2['notifications'][notificationID]['Operation ID'] is not None):
+                    await hostNotificationsChannel.send(f"{self.database2['notifications'][notificationID]['User']} {self.database2['notifications'][notificationID]['Message']}")
+                else:
+                    await botCommandsChannel.send(f"{self.database2['notifications'][notificationID]['User']} {self.database2['notifications'][notificationID]['Message']}")
                 del self.database2['notifications'][notificationID]
                 saveJsonData(self)
 
@@ -210,7 +219,7 @@ async def checkIfUserExists(ctx, userToVerify):
     try:
         ctx.guild.get_member(int(userToVerify.translate({ord(i): None for i in '@<>'})))
     except:
-        return await botCommandsChannel.send("Invalid User, please make sure its an @User mention")
+        return await botCommandsChannel.send(f"{userToVerify} Invalid User, please make sure its an @User mention")
     return None
 
 async def checkIfIntNumber(numberToVerify):
@@ -218,7 +227,7 @@ async def checkIfIntNumber(numberToVerify):
     try:
         val = int(numberToVerify)
     except:
-        return await botCommandsChannel.send("Invalid Number, please make sure its a whole number")
+        return await botCommandsChannel.send(f"{numberToVerify} Invalid Number, please make sure its a whole number")
     return None
 
 async def checkOpID(self, operation_id):
@@ -246,10 +255,13 @@ def setup(client):
 
     '''
     Questions:
-    What Channnel do we want the bot to post reminders into
-    Who do we want to be able to create reminders
-    How often do we want to loop
+    What Channel do we want the bot to post reminders into: Host Notifications
+    Who do we want to be able to create reminders: Anyone
+    How often do we want to loop: 60 second
     What other functions should we add
-    When do we want to ping Hosts
-    Do we want the event/reminders automatically created when a roster is posted
+
+    When do we want to ping Hosts /
+    Do we want the event/reminders automatically created when a roster is posted /
+    Events: Yes
+    Reminders: 72hours, 24hours, 1hour
     '''
