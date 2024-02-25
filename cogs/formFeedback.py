@@ -18,7 +18,7 @@ class FormFeedBack(commands.Cog):
 
     async def serveForm(self, interaction, operationId):
         if operationId == None:
-            await interaction.response.send_message("Operation not found, submissions have most likely closed.")
+            await interaction.response.send_message("Operation not found, submissions have most likely closed.", delete_after=10)
             return
         await interaction.response.send_modal(FeedbackModal(operationId, self.autoSlot))
 

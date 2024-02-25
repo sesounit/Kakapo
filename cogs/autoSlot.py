@@ -543,7 +543,7 @@ class autoSlot(commands.Cog):
         view = View(timeout=None)
         async def formButtonBackend(interaction):
             await self.FormFeedBack.serveForm(interaction, self.findOperationByName(interaction.channel.name.removesuffix(" Feedback")))
-        formButton = Button(label="Feedback Form", style=nextcord.ButtonStyle.success)
+        formButton = Button(label="Submit your Feedback", style=nextcord.ButtonStyle.success)
         formButton.callback = formButtonBackend
         view.add_item(formButton)
         # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
