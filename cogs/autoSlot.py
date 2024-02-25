@@ -17,6 +17,7 @@ class autoSlot(commands.Cog):
             with open('autoSlot.json', 'r') as json_file:
                 self.database = json.load(json_file)
         self.FormFeedBack = self.client.get_cog("FormFeedBack")
+        self.hostTools = self.client.get_cog("hostTools")
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -105,8 +106,13 @@ class autoSlot(commands.Cog):
 
         # Post the roster
         # If channel doesnt exist, make the channel and post the first roster in it
+        # Additionally, create reminders and events for the operation
         if roster_channel == None:
             roster_channel = await self.roster_category.create_text_channel(f'{operation_id}-{channel_name}')
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 3600), "One Hour until Op Start", operation_id)
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 86400), "24 Hours until Op Start", operation_id)
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 259200), "72 Hours until Op Start", operation_id)
+            await self.hostTools.addEvent(ctx, operation_id)
 
         # Parse groups into an embed roster
         embed_roster_message = self.embedGroupsToRoster(ctx, operation_id, group_list)
@@ -502,6 +508,7 @@ class autoSlot(commands.Cog):
         try:
             await ctx.message.delete()
         except:
+            # This could be a pass, idk why this is a print. - Pickle
             print()
 
         # Determine Op ID by channel name
@@ -536,7 +543,7 @@ class autoSlot(commands.Cog):
         view = View(timeout=None)
         async def formButtonBackend(interaction):
             await self.FormFeedBack.serveForm(interaction, self.findOperationByName(interaction.channel.name.removesuffix(" Feedback")))
-        formButton = Button(label="Feedback Form", style=nextcord.ButtonStyle.success)
+        formButton = Button(label="Submit your Feedback", style=nextcord.ButtonStyle.success)
         formButton.callback = formButtonBackend
         view.add_item(formButton)
         # If there is a squad leader on the roster, they will be mentioned along with the host in the first message /visible/ in the channel by the time anyone gets to it.
@@ -549,9 +556,9 @@ class autoSlot(commands.Cog):
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
         '''
         if assignments.get('1') == None:
-            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.", color=0x0E8643)
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nLeave feedback for leadership as well.", color=0x0E8643)
         else:
-            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}", color=0x0E8643)
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nLeader: {ctx.guild.get_member(assignments.get('1')).mention}", color=0x0E8643)
         await thread.send(embed = feedbackEmbed, view=view)
         
 
