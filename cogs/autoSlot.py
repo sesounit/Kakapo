@@ -17,6 +17,7 @@ class autoSlot(commands.Cog):
             with open('autoSlot.json', 'r') as json_file:
                 self.database = json.load(json_file)
         self.FormFeedBack = self.client.get_cog("FormFeedBack")
+        self.hostTools = self.client.get_cog("hostTools")
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
@@ -105,8 +106,13 @@ class autoSlot(commands.Cog):
 
         # Post the roster
         # If channel doesnt exist, make the channel and post the first roster in it
+        # Additionally, create reminders and events for the operation
         if roster_channel == None:
             roster_channel = await self.roster_category.create_text_channel(f'{operation_id}-{channel_name}')
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 3600), "One Hour until Op Start", operation_id)
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 86400), "24 Hours until Op Start", operation_id)
+            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 259200), "72 Hours until Op Start", operation_id)
+            await self.hostTools.addEvent(ctx, operation_id)
 
         # Parse groups into an embed roster
         embed_roster_message = self.embedGroupsToRoster(ctx, operation_id, group_list)
