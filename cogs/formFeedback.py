@@ -38,9 +38,9 @@ class FeedbackModal(nextcord.ui.Modal):
         #self.emEnjRating = nextcord.ui.StringSelect(placeholder = "Your overall enjoyment rating", min_values=1, max_values=1)
         #for i in range(1, 11):
         #    self.emEnjRating.add_option(label=i, value=i)
-        self.emEnjRating =  nextcord.ui.TextInput(label = "Your overall enjoyment Rating", min_length=1, max_length=2, required=True, placeholder="Enter your rating from 1-10 here!")
+        self.emEnjRating =  nextcord.ui.TextInput(label = "Your overall enjoyment Rating", min_length=1, max_length=3, required=True, placeholder="Enter your rating from 1-10 here!")
         self.emEnjFeedback = nextcord.ui.TextInput(label = "Your overall enjoyment feedback", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=False, placeholder="How did you generally enjoy the operation?")
-        self.emDesignRating =  nextcord.ui.TextInput(label = "Your operation design Rating", min_length=1, max_length=2, required=False, placeholder="Enter your rating from 1-10 here!")
+        self.emDesignRating =  nextcord.ui.TextInput(label = "Your operation design Rating", min_length=1, max_length=3, required=False, placeholder="Enter your rating from 1-10 here!")
         self.emDesignFeedback = nextcord.ui.TextInput(label = "Your operation design feedback", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=False, placeholder="What do you think of the operation's design?")
         self.emLeadershipFeedback = nextcord.ui.TextInput(label = "Your leadership feedback", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=False, placeholder="What do you think of the leadership?")
        

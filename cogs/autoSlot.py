@@ -502,6 +502,7 @@ class autoSlot(commands.Cog):
         try:
             await ctx.message.delete()
         except:
+            # This could be a pass, idk why this is a print. - Pickle
             print()
 
         # Determine Op ID by channel name
@@ -549,9 +550,9 @@ class autoSlot(commands.Cog):
             await thread.send(f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}")
         '''
         if assignments.get('1') == None:
-            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nLeave feedback for leadership as well.", color=0x0E8643)
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nLeave feedback for leadership as well.", color=0x0E8643)
         else:
-            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Feedback for Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nGive a number out of ten. \nFeedback for leadership: {ctx.guild.get_member(assignments.get('1')).mention}", color=0x0E8643)
+            feedbackEmbed = nextcord.Embed(title=f"{self.database['operations'][operation_id]['name']} Feedback:", description=f"Host: {ctx.guild.get_member(self.database['operations'][operation_id]['author']).mention} \nLeader: {ctx.guild.get_member(assignments.get('1')).mention}", color=0x0E8643)
         await thread.send(embed = feedbackEmbed, view=view)
         
 
