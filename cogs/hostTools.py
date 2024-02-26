@@ -63,6 +63,9 @@ class hostTools(commands.Cog):
         channelInput = dogegsChannel
         end_timeInput = datetime.utcfromtimestamp(int(self.database['operations'][operation_id]['operation_timestamp']) + 7200)
 
+        # Check if start time is in the past as it will fail to complete if it is
+        if await checkIfTimeIsInThePast(start_timeInput) is not None: return
+
         # Generate discord event using pre-defined variables if event with same name doesnt exist
         if (await eventExists(ctx, nameInput)): 
             await botCommandsChannel.send("Event for " + nameInput + " already exists")
@@ -77,7 +80,7 @@ class hostTools(commands.Cog):
         
         ''' 
         Created 1-19-2024 by Chief
-        Updated 1-22-2024 by Chief
+        Updated 2-25-2024 by Chief
 
         -- Purpose -- 
         * Create a reminder to ping Arma Operation Hosts at specific times
@@ -119,7 +122,7 @@ class hostTools(commands.Cog):
         if (operation_id is not None):
             await hostNotificationsChannel.send(f"Notification created for {user} at {formattedTime} with message \"{notifMessage}\" for operation ID {operation_id}")
         else:
-            await botCommandsChannel.send(f"Notification created for {user} at {formattedTime} with message {notifMessage}")
+            await botCommandsChannel.send(f"Notification created for {user} at {formattedTime} with message \"{notifMessage}\"")
 
         
     @commands.command(name = "deleteReminder", help = "Delete a reminder")
@@ -220,6 +223,7 @@ async def checkIfUserExists(ctx, userToVerify):
     try:
         ctx.guild.get_member(int(userToVerify.translate({ord(i): None for i in '@<>'})))
     except:
+        print(f"Failed to find user with id {userToVerify}")
         return await botCommandsChannel.send(f"{userToVerify} Invalid User, please make sure its an @User mention")
     return None
 
@@ -228,6 +232,7 @@ async def checkIfIntNumber(numberToVerify):
     try:
         val = int(numberToVerify)
     except:
+        print(f"Value failed to verify as an int {numberToVerify}")
         return await botCommandsChannel.send(f"{numberToVerify} Invalid Number, please make sure its a whole number")
     return None
 
@@ -237,8 +242,18 @@ async def checkOpID(self, operation_id):
         if operation_id not in self.database['operations']:
             return await botCommandsChannel.send("There is no operation present in the database with this ID.")
     except:
+        print(f"Value failed to verify as an operation ID {operation_id}")
         return await botCommandsChannel.send("A problem occured with the operation id.")
     return None
+
+async def checkIfTimeIsInThePast(inputTime):
+    # If operation with this ID does not exist, return message
+    currentTime = datetime.utcnow()
+    if (currentTime > inputTime):
+        print(f"Time found to be in the past current Time = {currentTime}, input Time = {inputTime}")
+        return await botCommandsChannel.send(f"{inputTime} Is in the past, please make sure its greater than the current time {currentTime}")
+    else:
+        return None
     
 async def deleteUserMessage(ctx):
     try:

@@ -109,10 +109,10 @@ class autoSlot(commands.Cog):
         # Additionally, create reminders and events for the operation
         if roster_channel == None:
             roster_channel = await self.roster_category.create_text_channel(f'{operation_id}-{channel_name}')
-            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 3600), "One Hour until Op Start", operation_id)
-            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 86400), "24 Hours until Op Start", operation_id)
-            await self.hostTools.addReminder(ctx, ctx.author.mention, (self.database['operations'][operation_id]['operation_timestamp'] - 259200), "72 Hours until Op Start", operation_id)
-            await self.hostTools.addEvent(ctx, operation_id)
+            await ctx.invoke(self.client.get_command('addReminder'),  user=ctx.author.mention, notifTime=(self.database['operations'][operation_id]['operation_timestamp'] - 3600), notifMessage = "One Hour until Op Start", operation_id = operation_id)
+            await ctx.invoke(self.client.get_command('addReminder'),  user=ctx.author.mention, notifTime=(self.database['operations'][operation_id]['operation_timestamp'] - 86400), notifMessage = "24 Hours until Op Start", operation_id = operation_id)
+            await ctx.invoke(self.client.get_command('addReminder'),  user=ctx.author.mention, notifTime=(self.database['operations'][operation_id]['operation_timestamp'] - 259200), notifMessage = "72 Hours until Op Start", operation_id = operation_id)
+            await ctx.invoke(self.client.get_command('addEvent'), operation_id=operation_id)
 
         # Parse groups into an embed roster
         embed_roster_message = self.embedGroupsToRoster(ctx, operation_id, group_list)
