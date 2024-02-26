@@ -221,7 +221,8 @@ async def eventExists(ctx, nameInput):
 async def checkIfUserExists(ctx, userToVerify):
     # If the input is not a valid user, return message
     try:
-        ctx.guild.get_member(int(userToVerify.translate({ord(i): None for i in '@<>'})))
+        print(f"Verified user with ID {userToVerify}")
+        ctx.guild.get_member(int(userToVerify.translate({ord(i): None for i in '@!<>'})))
     except:
         print(f"Failed to find user with id {userToVerify}")
         return await botCommandsChannel.send(f"{userToVerify} Invalid User, please make sure its an @User mention")
@@ -230,6 +231,7 @@ async def checkIfUserExists(ctx, userToVerify):
 async def checkIfIntNumber(numberToVerify):
     # If the input is not a number, return message
     try:
+        print(f"{numberToVerify} is an int")
         val = int(numberToVerify)
     except:
         print(f"Value failed to verify as an int {numberToVerify}")
@@ -239,6 +241,7 @@ async def checkIfIntNumber(numberToVerify):
 async def checkOpID(self, operation_id):
     # If operation with this ID does not exist, return message
     try:
+        print(f"{operation_id} is an operation")
         if operation_id not in self.database['operations']:
             return await botCommandsChannel.send("There is no operation present in the database with this ID.")
     except:
@@ -253,6 +256,7 @@ async def checkIfTimeIsInThePast(inputTime):
         print(f"Time found to be in the past current Time = {currentTime}, input Time = {inputTime}")
         return await botCommandsChannel.send(f"{inputTime} Is in the past, please make sure its greater than the current time {currentTime}")
     else:
+        print(f"Input time is valid, current Time = {currentTime}, input Time = {inputTime}")
         return None
     
 async def deleteUserMessage(ctx):
