@@ -1,8 +1,9 @@
-import nextcord, random, os
+import nextcord, random, os, time
 from nextcord.ext import commands, tasks
 #Types of images we'll accept.
 image_types = ["png", "jpeg", "jpg"]
-filepath = '~/11ty-sesosite/assets/img/raw_media/'
+# Server filepath: ~/11ty-sesosite/assets/img/raw_media/
+filepath = 'attachments/'
 global attachments
 attachments = []
 #Warphotographer Screenshot Uploader Cog
@@ -20,22 +21,17 @@ class warPhotographer(commands.Cog):
     
     @commands.command(aliases=['uploadscreenshot', 'usc', 'u'])
     async def upload(self, ctx):
-        messages = await ctx.channel.history(limit=2).flatten()
-        for msg in messages:
-            if msg.author == ctx.author:
-                for attachment in msg.attachments:
-                    if any(attachment.filename.lower().endswith(image) for image in image_types):
-                        full_filepath = os.path.join(f'{filepath}{ctx.author.display_name}_{attachment.filename.lower()}')
-                        # If filename is unknown, generate a random one
-                        if 'unknown' in attachment.filename:
-                            full_filepath = os.path.join(f'{filepath}{ctx.author.display_name}_({random.randrange(1, (9999))})_{attachment.filename.lower()}')
-                        full_filepath = os.path.expanduser(full_filepath)
-                        await attachment.save(full_filepath)
-                        await ctx.send("File successfully uploaded!")
-                        return
-            else:
-                await ctx.send("Last message is not your own.")
-                return
+        filesUploaded = 0
+        for attachment in ctx.message.attachments:
+            if any(attachment.filename.lower().endswith(image) for image in image_types) and filesUploaded < 11:
+                # Time is inserted for record keeping and to account for attachments of the same name.
+                full_filepath = os.path.join(f'{filepath}{ctx.author.display_name}_({time.time()})_{attachment.filename.lower()}')
+                full_filepath = os.path.expanduser(full_filepath)
+                await attachment.save(full_filepath)
+                filesUploaded = filesUploaded + 1
+        if filesUploaded != 0:
+            await ctx.send(f"{filesUploaded} file(s) successfully uploaded!")
+            return
         await ctx.send("Something undefined went wrong processing your request.")
 
 
