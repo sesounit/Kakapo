@@ -93,17 +93,34 @@ class Music(commands.Cog):
             
             if "https://youtu.be/" in search:
                 search = musicHelper.convertShort(search)
-            search = await wavelink.YouTubeTrack.search(search)
-            search = search[0]
-
-            if vc.queue.is_empty and not vc.is_playing():
-                await vc.play(search)
-                await ctx.message.add_reaction('▶️')
-                await ctx.send(f'**Now playing:** `{search.title}`')
+            if "playlist" in search:
+                search = await wavelink.NodePool.get_node().get_playlist(cls=wavelink.YouTubePlaylist, identifier=search)
+                if len(search.tracks) > 100:
+                    return await ctx.send("Playlist too large, please limit yourself to playlists smaller than 100.")
+                if vc.queue.is_empty and not vc.is_playing():
+                    await vc.play(search.tracks[0])
+                    await ctx.message.add_reaction('▶️')
+                    await ctx.send(f'**Now playing:** `{search.tracks[0].title}`')
+                    for track in search.tracks:
+                        if track == search.tracks[0]:
+                            continue
+                        await vc.queue.put_wait(track)
+                else:
+                    for track in search.tracks:
+                        await vc.queue.put_wait(track)
+                    await ctx.send("Populating queue with playlist.")
             else:
-                await vc.queue.put_wait(search)
-                await ctx.message.add_reaction('▶️')
-                await ctx.send(f'**Added to Queue:** `{search.title}`')
+                search = await wavelink.YouTubeTrack.search(search)
+                search = search[0]
+
+                if vc.queue.is_empty and not vc.is_playing():
+                    await vc.play(search)
+                    await ctx.message.add_reaction('▶️')
+                    await ctx.send(f'**Now playing:** `{search.title}`')
+                else:
+                    await vc.queue.put_wait(search)
+                    await ctx.message.add_reaction('▶️')
+                    await ctx.send(f'**Added to Queue:** `{search.title}`')
 
         else:
             vc: wavelink.Player = ctx.voice_client
