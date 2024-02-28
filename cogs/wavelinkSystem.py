@@ -44,7 +44,7 @@ class Music(commands.Cog):
 
     @commands.Cog.listener()
     async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
-        if not player.queue.is_empty:
+        if not player.queue.is_empty and not len(player.channel.members) < 2:
             next = player.queue.get()
             await player.play(next)
             return
@@ -59,14 +59,14 @@ class Music(commands.Cog):
                 pass
             return
 
-    #Disconnects after 10 minutes of activity
+    #Disconnects after 10 minutes of inactivity or it is alone in a channel.
     @tasks.loop(minutes=10)
     async def timeout(self):
         global i
         global p
         if p == None:
             self.timeout.cancel()
-        elif not p.is_playing() and i == 1:
+        elif not (p.is_playing() or len(p.channel.members) < 2) and i == 1:
             await p.disconnect()
             p = None
             self.timeout.cancel()
