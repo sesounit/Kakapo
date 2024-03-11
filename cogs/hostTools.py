@@ -23,7 +23,7 @@ class hostTools(commands.Cog):
         global hostNotificationsChannel
         global hostSchedulingChannel
         botCommandsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"bot-commands")
-        dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=911066596456415269)
+        dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=451858500784619550)
         hostNotificationsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"host-notifications")
         hostSchedulingChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"scheduling")
         #Check and load pre-existing roster JSON
