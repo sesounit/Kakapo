@@ -48,7 +48,7 @@ class autoVoiceChannels(commands.Cog):
 
         #SESO Discord new session channel id: 694641754686881883
         #Kakapo Red Testing Discord new session channel id: 911066596456415268
-        if member.voice.channel.id == 694641754686881883:
+        if member.voice != None and member.voice.channel.id == 694641754686881883:
             # Create channel and append to created_voice_channels
             channel_name = f"#{self.latest_channel_number} [General]"
             created_channel = await member.voice.channel.clone(name=channel_name, reason=None)
