@@ -293,7 +293,7 @@ class autoSlot(commands.Cog):
         # Check if slot already has user
 
         if self.database['operations'][operation_id]['assignments'].get(slot_id):
-            return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
+            return await botCommandsChannel.send(f"{ctx.user.mention} cannot claim slot {slot_id} because it is already taken.")
         
        
 
