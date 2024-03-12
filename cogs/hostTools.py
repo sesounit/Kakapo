@@ -249,10 +249,10 @@ class hostTools(commands.Cog):
 
         bChannel = await botCommandsChannel.send("About to be edited.")
         await bChannel.edit(f"{ctx.author.mention} has removed themself from Host Slot {slot_id}")
-    '''
+    ''''''
     @commands.command(name = "test", help = "test")
     async def test(self, ctx):
-        data = await nextSeveralDaysOfTheWeek(5,12)
+        data = await nextSeveralDaysOfTheWeek(6,12)
         commandData = ""
         hostJsonData = self.database3['hostRoster'].copy()
         count = 0
@@ -281,7 +281,7 @@ class hostTools(commands.Cog):
     async def test2(self, ctx):
         # Check to see if the embed already exists
         scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
-        data = await nextSeveralDaysOfTheWeek(5,12)
+        data = await nextSeveralDaysOfTheWeek(6,12)
         hostJsonData = self.database3['hostRoster'].copy()
         currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 60000
         if hostJsonData == {}:
@@ -303,7 +303,7 @@ class hostTools(commands.Cog):
             else:
                 hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
                 await scheduler_message.edit(embed=hostEmbed)
-        '''
+        ''''''
 
     @tasks.loop(seconds=60)
     async def sendNotification(self):
@@ -337,7 +337,7 @@ class hostTools(commands.Cog):
         # Check to see if the host json exists
         if hostJsonData == {}:
             count = 0
-            data = await nextSeveralDaysOfTheWeek(5,12)
+            data = await nextSeveralDaysOfTheWeek(6,12)
             for i in data:
                 count = count + 1
                 self.database3['hostRoster'].update({str(count) : {'Time': data[count-1], 'User': ""}})
@@ -354,7 +354,7 @@ class hostTools(commands.Cog):
         if int(self.database3['hostRoster'][str(1)]["Time"]) < currentUTCTimePlusOneDay:
             scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
             hostJsonData = self.database3['hostRoster'].copy()
-            data = await nextSeveralDaysOfTheWeek(5,12)
+            data = await nextSeveralDaysOfTheWeek(6,12)
             for i in hostJsonData:
                 if int(i) == len(hostJsonData):
                     break
@@ -442,14 +442,15 @@ async def checkIfTimeIsInThePast(inputTime):
     
 async def nextSeveralDaysOfTheWeek(dayOfWeek, numberOfThoseDays):
     currentUTCTime = datetime.utcnow()
-    todayNumber = datetime.utcnow().weekday()
+    ETCcurrentTimestamp = str(currentUTCTime.timestamp() - 14400)
+    correctedCurrentTimestamp = int(ETCcurrentTimestamp[0:10])
+    todayNumber = datetime.utcfromtimestamp(int(correctedCurrentTimestamp)).weekday()
     if(dayOfWeek-todayNumber >= 0):
         daydifference = dayOfWeek-todayNumber
     else:
         daydifference = (7 + dayOfWeek - todayNumber)
 
-    UNIXcurrentTimestamp = str(currentUTCTime.timestamp() - 18000)
-    correctedCurrentTimestamp = int(UNIXcurrentTimestamp[0:10])
+    
     upcomingDay = correctedCurrentTimestamp + (daydifference*86400)
     currentLoopTimestamp = upcomingDay
     dateList = []
