@@ -250,9 +250,9 @@ class hostTools(commands.Cog):
         bChannel = await botCommandsChannel.send("About to be edited.")
         await bChannel.edit(f"{ctx.author.mention} has removed themself from Host Slot {slot_id}")
     ''''''
-    @commands.command(name = "test", help = "test")
+    @commands.command(name = "hostTestFunction1", help = "test")
     async def test(self, ctx):
-        data = await nextSeveralDaysOfTheWeek(6,12)
+        data = await nextSeveralDaysOfTheWeek(5,12)
         commandData = ""
         hostJsonData = self.database3['hostRoster'].copy()
         count = 0
@@ -277,11 +277,11 @@ class hostTools(commands.Cog):
         await botCommandsChannel.send("embedData")
         await botCommandsChannel.send(embedData)
 
-    @commands.command(name = "test2", help = "test")
+    @commands.command(name = "hostTestFunction2", help = "test")
     async def test2(self, ctx):
         # Check to see if the embed already exists
         scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
-        data = await nextSeveralDaysOfTheWeek(6,12)
+        data = await nextSeveralDaysOfTheWeek(5,12)
         hostJsonData = self.database3['hostRoster'].copy()
         currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 60000
         if hostJsonData == {}:
@@ -337,7 +337,7 @@ class hostTools(commands.Cog):
         # Check to see if the host json exists
         if hostJsonData == {}:
             count = 0
-            data = await nextSeveralDaysOfTheWeek(6,12)
+            data = await nextSeveralDaysOfTheWeek(5,12)
             for i in data:
                 count = count + 1
                 self.database3['hostRoster'].update({str(count) : {'Time': data[count-1], 'User': ""}})
@@ -354,7 +354,7 @@ class hostTools(commands.Cog):
         if int(self.database3['hostRoster'][str(1)]["Time"]) < currentUTCTimePlusOneDay:
             scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
             hostJsonData = self.database3['hostRoster'].copy()
-            data = await nextSeveralDaysOfTheWeek(6,12)
+            data = await nextSeveralDaysOfTheWeek(5,12)
             for i in hostJsonData:
                 if int(i) == len(hostJsonData):
                     break
