@@ -6,22 +6,26 @@ class hostTools(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.database2 = {'notifications' : {}}
+        self.database3 = {'hostRoster' : {}}
         self.roster_category = None
 
     def cog_unload(self):
         self.sendNotification.cancel()
+        self.updateHostSlots.cancel()
 
     @commands.Cog.listener()
     async def on_ready(self):
-        #Set global variable for channels
+        # Set global variable for channels
         # Because of the funny icons in Dogegs we have to use the ID of the channel 451858500784619550
         # Because of the funny icons in Monkeys we have to use the ID of the channel 911066596456415269
-        global hostNotificationsChannel
-        global dogegsChannel
         global botCommandsChannel 
+        global dogegsChannel
+        global hostNotificationsChannel
+        global hostSchedulingChannel
         botCommandsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"bot-commands")
         dogegsChannel = nextcord.utils.get(self.client.get_all_channels(), id=451858500784619550)
         hostNotificationsChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"host-notifications")
+        hostSchedulingChannel = nextcord.utils.get(self.client.get_all_channels(), name=f"scheduling")
         #Check and load pre-existing roster JSON
         if os.path.exists('autoSlot.json'):
             with open('autoSlot.json', 'r') as json_file:
@@ -29,7 +33,11 @@ class hostTools(commands.Cog):
         if os.path.exists('autoNotifications.json'):
             with open('autoNotifications.json', 'r') as json_file2:
                 self.database2 = json.load(json_file2)
+        if os.path.exists('hostRoster.json'):
+            with open('hostRoster.json', 'r') as json_file3:
+                self.database3 = json.load(json_file3)
         self.sendNotification.start()
+        self.updateHostSlots.start()
 
 
     @commands.command(name = "addEvent", help = "Adds a discord event for a specific operation")
@@ -75,7 +83,7 @@ class hostTools(commands.Cog):
 
         
 
-    @commands.command(name = "addReminder", help = "Schedule a reminder to ping a Host")
+    @commands.command(name = "addReminder", help = "Schedule a reminder to ping an @")
     async def addReminder(self, ctx, user, notifTime, notifMessage = None, operation_id = None):
         
         ''' 
@@ -117,7 +125,7 @@ class hostTools(commands.Cog):
 
         # Add row to json with input data and save the file
         self.database2['notifications'].update({str(notificationID) : {'User': user, 'Time': notifTime, 'Message': notifMessage, 'Operation ID': operation_id}})
-        saveJsonData(self)
+        saveNotifJsonData(self)
         formattedTime = "<t:" + str(notifTime) + ":F>"
         if (operation_id is not None):
             await hostNotificationsChannel.send(f"Notification created for {user} at {formattedTime} with message \"{notifMessage}\" for operation ID {operation_id}")
@@ -148,10 +156,11 @@ class hostTools(commands.Cog):
 
         # Delete value from internal DB
         del self.database2['notifications'][notificationID]
-        saveJsonData(self)
+        saveNotifJsonData(self)
         await botCommandsChannel.send(messageToSend)
 
-    @commands.command(name = "listReminders", help = "Delete a reminder")
+
+    @commands.command(name = "listReminders", help = "List Reminders")
     async def listReminders(self, ctx):
         ''' 
         Created 1-21-2024 by Chief
@@ -165,13 +174,136 @@ class hostTools(commands.Cog):
         * Format the time in the long discord time format
         * Send notification to bots channel
         '''
-
+        notifListEmbedData = ""
+        print("Attempting Reminder List")
         # Loop through notification DB and send the list to the bots command channel
         for notificationID in self.database2['notifications'].copy():
             user = ctx.guild.get_member(int(self.database2['notifications'][notificationID]['User'].translate({ord(i): None for i in '@<>'})))
-            time = "<t:" + str(self.database2['notifications'][notificationID]['Time']) + ":F>"
-            await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
+            time = "<t:" + str(self.database2['notifications'][notificationID]['Time']) + ":F>\n"
+            notifListEmbedData = notifListEmbedData + f"{user} {time}"
+            #await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
+        notifListEmbed = nextcord.Embed(title=f"Active Notifications", description=notifListEmbedData, color=0x0E8643)
+        await botCommandsChannel.send(embed=notifListEmbed)
 
+
+    @commands.command(name = "hostSlot", help = "Signup for host timeslot")
+    async def hostSlot(self, ctx, slot_id):
+
+        # Check to see if the imbed already exists
+        scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
+
+        hostJsonData = self.database3['hostRoster'].copy()
+
+        # Check if slot exists
+        if hostJsonData.get(slot_id) == None:
+            return await botCommandsChannel.send(f"Host Slot ID {slot_id} not found.")
+        
+        # Check if slot already has user
+        if self.database3['hostRoster'][slot_id]["User"] != "":
+            return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
+        
+        #Assign Slot
+        self.database3['hostRoster'][slot_id]["User"] = ctx.author.mention
+
+        embedData = await hostJsonEmbedData(self)
+        saveHostRosterJsonData(self)
+        
+        if (scheduler_message == None):
+            hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+            await hostSchedulingChannel.send(embed=hostEmbed)
+        else:
+            hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+            await scheduler_message.edit(embed=hostEmbed)
+
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.author.mention} has added themself to Host Slot {slot_id}")
+        
+        
+    @commands.command(name = "removeHostSlot", help = "Remove signup for host timeslot")
+    async def removeHostSlot(self, ctx, slot_id):
+
+        # Check to see if the imbed already exists
+        scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
+
+        hostJsonData = self.database3['hostRoster'].copy()
+
+        # Check if slot exists
+        if hostJsonData.get(slot_id) == None:
+            return await botCommandsChannel.send(f"Host Slot ID {slot_id} not found.")
+        
+        if self.database3['hostRoster'][slot_id]["User"] != ctx.author.id:
+            if "Campaign Host" in ctx.author.roles or "Operations Command" in ctx.author.roles or "Command Consultant" in ctx.author.roles or "Operation Host" in ctx.author.roles:
+                return await botCommandsChannel.send('You are not a host. Only hosts can remove another operative from a slot.')
+            self.database3['hostRoster'][slot_id]["User"] = ""
+        else:
+            self.database3['hostRoster'][slot_id]["User"] = ""
+        embedData = await hostJsonEmbedData(self)
+        saveHostRosterJsonData(self)
+        
+        if (scheduler_message == None):
+            hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+            await hostSchedulingChannel.send(embed=hostEmbed)
+        else:
+            hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+            await scheduler_message.edit(embed=hostEmbed)
+
+        bChannel = await botCommandsChannel.send("About to be edited.")
+        await bChannel.edit(f"{ctx.author.mention} has removed themself from Host Slot {slot_id}")
+    '''
+    @commands.command(name = "test", help = "test")
+    async def test(self, ctx):
+        data = await nextSeveralDaysOfTheWeek(5,12)
+        commandData = ""
+        hostJsonData = self.database3['hostRoster'].copy()
+        count = 0
+        print("This is the data")
+        print(hostJsonData)
+        if hostJsonData == {}:
+            print("It Empty bro")
+            for i in data:
+                print(i)
+                count = count + 1
+                self.database3['hostRoster'].update({str(count) : {'Time': data[count-1], 'User': ""}})
+        saveHostRosterJsonData(self)
+        hostJsonData = self.database3['hostRoster'].copy()
+        print("This is the data2")
+        print(hostJsonData)
+        for i in data:
+            print(i)
+            commandData = commandData + f"<t:{i}:D>\n"
+        embedData = await hostJsonEmbedData(self)
+        await botCommandsChannel.send("commandData")
+        await botCommandsChannel.send(commandData)
+        await botCommandsChannel.send("embedData")
+        await botCommandsChannel.send(embedData)
+
+    @commands.command(name = "test2", help = "test")
+    async def test2(self, ctx):
+        # Check to see if the embed already exists
+        scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
+        data = await nextSeveralDaysOfTheWeek(5,12)
+        hostJsonData = self.database3['hostRoster'].copy()
+        currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 60000
+        if hostJsonData == {}:
+            for i in data:
+                count = count + 1
+                self.database3['hostRoster'].update({str(count) : {'Time': data[count-1], 'User': ""}})
+        if int(self.database3['hostRoster'][str(1)]["Time"]) < currentUTCTimePlusOneDay:
+            hostJsonData = self.database3['hostRoster'].copy()
+            for i in hostJsonData:
+                if int(i) == len(hostJsonData):
+                    break
+                self.database3['hostRoster'][str(i)]["Time"] = self.database3['hostRoster'][str(int(i)+1)]["Time"]
+            self.database3['hostRoster'][str(len(hostJsonData))]["Time"] = data[11]
+            self.database3['hostRoster'][str(len(hostJsonData))]["User"] = ""
+            embedData = await hostJsonEmbedData(self)
+            if (scheduler_message == None):
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await hostSchedulingChannel.send(embed=hostEmbed)
+            else:
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await scheduler_message.edit(embed=hostEmbed)
+        '''
 
     @tasks.loop(seconds=60)
     async def sendNotification(self):
@@ -186,7 +318,6 @@ class hostTools(commands.Cog):
         * Every 60 seconds go through the autoNotifications json
         * If the notification time is less than the current time, send notification and delete the entry
         '''
-         
         currentUTCTime = datetime.utcnow()
         # Every 60 seconds loop through the notification DB by creating a temp copy of the DB and comparing the timestamp of the current time to the time in the DB
         for notificationID in self.database2['notifications'].copy():
@@ -196,19 +327,69 @@ class hostTools(commands.Cog):
                 else:
                     await botCommandsChannel.send(f"{self.database2['notifications'][notificationID]['User']} {self.database2['notifications'][notificationID]['Message']}")
                 del self.database2['notifications'][notificationID]
-                saveJsonData(self)
+                saveNotifJsonData(self)
+                
+    @tasks.loop(seconds=3600)
+    async def updateHostSlots(self):
+        scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
+        currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 60000
+        hostJsonData = self.database3['hostRoster'].copy()
+        # Check to see if the host json exists
+        if hostJsonData == {}:
+            count = 0
+            data = await nextSeveralDaysOfTheWeek(5,12)
+            for i in data:
+                count = count + 1
+                self.database3['hostRoster'].update({str(count) : {'Time': data[count-1], 'User': ""}})
+            saveHostRosterJsonData(self)
+            embedData = await hostJsonEmbedData(self)
+            if (scheduler_message == None):
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await hostSchedulingChannel.send(embed=hostEmbed)
+            else:
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await scheduler_message.edit(embed=hostEmbed)
+        
+        # If the earliest slot in the host roster is earlier than the current day + 1 than remove it, push all dates up, and 
+        if int(self.database3['hostRoster'][str(1)]["Time"]) < currentUTCTimePlusOneDay:
+            scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
+            hostJsonData = self.database3['hostRoster'].copy()
+            data = await nextSeveralDaysOfTheWeek(5,12)
+            for i in hostJsonData:
+                if int(i) == len(hostJsonData):
+                    break
+                self.database3['hostRoster'][str(i)]["Time"] = self.database3['hostRoster'][str(int(i)+1)]["Time"]
+                self.database3['hostRoster'][str(i)]["User"] = self.database3['hostRoster'][str(int(i)+1)]["User"]
+            self.database3['hostRoster'][str(len(hostJsonData))]["Time"] = data[11]
+            self.database3['hostRoster'][str(len(hostJsonData))]["User"] = ""
+            saveHostRosterJsonData(self)
+            embedData = await hostJsonEmbedData(self)
+            if (scheduler_message == None):
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await hostSchedulingChannel.send(embed=hostEmbed)
+            else:
+                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
+                await scheduler_message.edit(embed=hostEmbed)
 
     # Required for sendNotification loop
     @sendNotification.before_loop
     async def beforeSendNotification(self):
         await self.client.wait_until_ready()
-
+    
+    @sendNotification.before_loop
+    async def beforeUpdateHostSlots(self):
+        await self.client.wait_until_ready()
 
 # Functions
-def saveJsonData(self):
-    # Dumps data to autoSlot.json
+def saveNotifJsonData(self):
+    # Dumps data to autoNotifications.json
     with open('autoNotifications.json', 'w') as f:
         json.dump(self.database2, f)
+
+def saveHostRosterJsonData(self):
+    # Dumps data to autoSlot.json
+    with open('hostRoster.json', 'w') as f:
+        json.dump(self.database3, f)
 
 async def eventExists(ctx, nameInput):
     # Loop through active events and if the name of the event is identical to the name of the operation, return True
@@ -259,6 +440,41 @@ async def checkIfTimeIsInThePast(inputTime):
         print(f"Input time is valid, current Time = {currentTime}, input Time = {inputTime}")
         return None
     
+async def nextSeveralDaysOfTheWeek(dayOfWeek, numberOfThoseDays):
+    currentUTCTime = datetime.utcnow()
+    todayNumber = datetime.utcnow().weekday()
+    if(dayOfWeek-todayNumber >= 0):
+        daydifference = dayOfWeek-todayNumber
+    else:
+        daydifference = (7 + dayOfWeek - todayNumber)
+
+    UNIXcurrentTimestamp = str(currentUTCTime.timestamp() - 18000)
+    correctedCurrentTimestamp = int(UNIXcurrentTimestamp[0:10])
+    upcomingDay = correctedCurrentTimestamp + (daydifference*86400)
+    currentLoopTimestamp = upcomingDay
+    dateList = []
+
+    for i in range(numberOfThoseDays):
+        dateList.append(currentLoopTimestamp)
+        currentLoopTimestamp = currentLoopTimestamp + (7*86400)
+    return dateList
+
+async def hostJsonEmbedData(self):
+    hostJsonData = self.database3['hostRoster'].copy()
+    embedData = ""
+    embedDataTime = ""
+    embedDataUser = ""
+    for i in hostJsonData:
+        embedDataTime = self.database3['hostRoster'][i]["Time"]
+        embedDataUser = self.database3['hostRoster'][i]["User"]
+        if embedDataUser == "":
+            x=1 
+        else:
+            embedDataUser = self.database3['hostRoster'][i]["User"]
+        embedData = embedData + f"{i}: <t:{embedDataTime}:D> - {embedDataUser}\n"
+    return embedData
+
+
 async def deleteUserMessage(ctx):
     try:
         await ctx.message.delete()
@@ -270,18 +486,3 @@ async def silentPingSingleUser(inputMessage, user):
     
 def setup(client):
     client.add_cog(hostTools(client))
-
-
-
-    '''
-    Questions:
-    What Channel do we want the bot to post reminders into: Host Notifications
-    Who do we want to be able to create reminders: Anyone
-    How often do we want to loop: 60 second
-    What other functions should we add
-
-    When do we want to ping Hosts /
-    Do we want the event/reminders automatically created when a roster is posted /
-    Events: Yes
-    Reminders: 72hours, 24hours, 1hour
-    '''
