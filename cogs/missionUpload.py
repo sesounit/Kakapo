@@ -10,10 +10,9 @@ class missionUpload(commands.Cog):
     @commands.command(aliases=['serverUpload', 'um', 'su'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
     async def uploadMission(self, ctx):
-        messages = await ctx.channel.history(limit=2).flatten()
         if len(ctx.message.attachments) < 2 and len(ctx.message.attachments) > 0:
             attachment = ctx.message.attachments[0]
-            if 'pbo' in attachment.filename:
+            if 'pbo' in attachment.filename.lower:
                 await attachment.save(f'{filepath}/{ctx.author.name}-{attachment.filename}')
                 await ctx.send(f'{ctx.author.mention} has uploaded {attachment.filename} to the server.')
                 return
