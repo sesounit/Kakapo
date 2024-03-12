@@ -139,5 +139,6 @@ dmypy.json
 muted.txt
 attachments
 autoSlot.json
+hostTools.json
 lavalink-node/lavalink.jar
 lavalink-node/logs
