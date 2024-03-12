@@ -1,5 +1,9 @@
-import nextcord, wavelink, datetime, time
+import nextcord, wavelink, time
 from nextcord.ext import commands, tasks
+import re
+
+p = None
+i = 0
 
 class musicHelper:
 
@@ -8,9 +12,10 @@ class musicHelper:
     def convertShort(search):
         return (f"https://www.youtube.com/watch?v={search.split('/')[3].split('?')[0]}")
 
-autodisconnect = {}
+        
+
 class Music(commands.Cog):
-    """Music cog to hold wavelink related commands and listeners."""
+    """Music cog to hold Wavelink related commands and listeners."""
 
     #def __init__(self, bot: commands.Bot):
     #    self.bot = bot
@@ -27,46 +32,53 @@ class Music(commands.Cog):
         """Connect to our Lavalink nodes."""
         await self.client.wait_until_ready()
 
-        nodes = [wavelink.Node(uri='http://localhost:2333', password="yoyoyo, it's me! mario!")]
-        # cache_capacity is EXPERIMENTAL. Turn it off by passing None
-        await wavelink.Pool.connect(nodes=nodes, client=self.client, cache_capacity=None)
-        wavelink.Player.autoplay = wavelink.AutoPlayMode.disabled
+        await wavelink.NodePool.create_node(bot=self.client,
+                                            host='127.0.0.1',
+                                            port=2333,
+                                            password="yoyoyo, it's me! mario!")
 
     @commands.Cog.listener()
     async def on_wavelink_node_ready(self, node: wavelink.Node):
         """Event fired when a node has finished connecting."""
-        print(f'Node: <{node.node.identifier}> is ready!')
+        print(f'Node: <{node.identifier}> is ready!')
 
     @commands.Cog.listener()
-    async def on_wavelink_track_end(self, player: wavelink.Player, track=None, reason=None):
-        player = player.player
-        if not player.queue.is_empty:
+    async def on_wavelink_track_end(self, player: wavelink.Player, track: wavelink.Track, reason):
+        if not player.queue.is_empty and not len(player.channel.members) < 2:
             next = player.queue.get()
             await player.play(next)
             return
         else:
+            global p
             p = player
-            ms = datetime.datetime.now()
-            autodisconnect[p] = (time.mktime(ms.timetuple()) * 1000)
+            global i
+            i = 0
             try:
                 await self.timeout.start()
             except:
                 pass
             return
 
-    #Disconnects after 10 minutes of activity. 600000 = 10 Minutes
-    @tasks.loop(minutes=1)
+    #Disconnects after 10 minutes of inactivity or it is alone in a channel.
+    @tasks.loop(minutes=10)
     async def timeout(self):
-        ms = datetime.datetime.now()
-        for p in list(autodisconnect):
-            if not p.is_playing() and (((time.mktime(ms.timetuple()) * 1000) - autodisconnect[p]) > 600000):
-                del autodisconnect[p]
-                await p.disconnect()
-            elif p.is_playing() or not p.queue.is_empty:
-                del autodisconnect[p]
-
+        global i
+        global p
+        if p == None:
+            self.timeout.cancel()
+        elif not (p.is_playing() or len(p.channel.members) < 2) and i == 1:
+            await p.disconnect()
+            p = None
+            self.timeout.cancel()
+        elif p.is_playing() or not p.queue.is_empty:
+            if i >= 1:
+                i = 0
+                p = None
+                self.timeout.cancel()
+        i = i + 1
+ 
     @commands.command(aliases=['continue','resume','re','res', 'p'])
-    async def play(self, ctx: commands.Context, *, search: str = None):
+    async def play(self, ctx: commands.Context, *, search: str):
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
@@ -78,15 +90,14 @@ class Music(commands.Cog):
                 await ctx.send(f'**Joined `{ctx.author.voice.channel}`**')
             else:
                 vc: wavelink.Player = ctx.voice_client
-
+            
             if "https://youtu.be/" in search:
                 search = musicHelper.convertShort(search)
-
             if "playlist" in search:
-                search = await wavelink.Playable.search(search)
+                search = await wavelink.NodePool.get_node().get_playlist(cls=wavelink.YouTubePlaylist, identifier=search)
                 if len(search.tracks) > 100:
                     return await ctx.send("Playlist too large, please limit yourself to playlists smaller than 100.")
-                if vc.queue.is_empty and not vc.playing:
+                if vc.queue.is_empty and not vc.is_playing():
                     await vc.play(search.tracks[0])
                     await ctx.message.add_reaction('▶️')
                     await ctx.send(f'**Now playing:** `{search.tracks[0].title}`')
@@ -94,47 +105,28 @@ class Music(commands.Cog):
                         if track == search.tracks[0]:
                             continue
                         await vc.queue.put_wait(track)
-                    return
                 else:
                     for track in search.tracks:
                         await vc.queue.put_wait(track)
                     await ctx.send("Populating queue with playlist.")
-                    return
-            if vc.queue.is_empty and not vc.playing:
-                tracks = await wavelink.Playable.search(search)
-                if not tracks:
-                    await ctx.send(f'No tracks found with query: `{search}`')
-                    return
-                try:
-                    track = tracks[0]
-                except:
-                    await ctx.send("Playlists are not supported.")
-                    return
-                await vc.play(track)
-                await ctx.message.add_reaction('▶️')
-                try:
-                    await ctx.send(f'**Now playing:** `{vc.current.title}`')
-                except:
-                    await ctx.send(f'**Now playing:** `Failed to find title`')
             else:
-                tracks = await wavelink.Playable.search(search)
-                if not tracks:
-                    await ctx.send(f'No tracks found with query: `{search}`')
-                    return
-                try:
-                    track = tracks[0]
-                except:
-                    await ctx.send("Playlists are not supported.")
-                    return
-                await vc.queue.put_wait(track)
-                await ctx.message.add_reaction('▶️')
-                await ctx.send(f'**Added to Queue:** `{track.title}`')
+                search = await wavelink.YouTubeTrack.search(search)
+                search = search[0]
+
+                if vc.queue.is_empty and not vc.is_playing():
+                    await vc.play(search)
+                    await ctx.message.add_reaction('▶️')
+                    await ctx.send(f'**Now playing:** `{search.title}`')
+                else:
+                    await vc.queue.put_wait(search)
+                    await ctx.message.add_reaction('▶️')
+                    await ctx.send(f'**Added to Queue:** `{search.title}`')
 
         else:
             vc: wavelink.Player = ctx.voice_client
-            await vc.pause(not vc.paused)
+            await vc.resume()
             await ctx.message.add_reaction('▶️')
-            await ctx.send(f'**Resumed:** `{vc.current.title}`')
+            await ctx.send(f'**Resumed:** `{vc.track.title}`')
     
     @commands.command()
     async def skip(self, ctx: commands.Context):
@@ -148,10 +140,10 @@ class Music(commands.Cog):
             await ctx.send("Queue is empty.")
 
 
-    @commands.command(aliases=['ps', 'unpause'])
+    @commands.command(aliases=['ps'])
     async def pause(self, ctx: commands.Context):
         vc: wavelink.Player = ctx.voice_client
-        await vc.pause(not vc.paused)
+        await vc.pause()
         await ctx.message.add_reaction('⏸️')
 
     @commands.command()
@@ -173,6 +165,10 @@ class Music(commands.Cog):
         vc: wavelink.Player = ctx.voice_client
         if not vc.queue.is_empty:
             vc.queue.clear()
+        try:
+            await self.timeout.cancel()
+        except:
+            pass
         await vc.disconnect()
         await ctx.message.add_reaction('⏏️')
 
@@ -203,18 +199,16 @@ class Music(commands.Cog):
             return
         #is_playing doesn't seem to work here, no clue why.
         try:
-            test = vc.current.title
+            test = vc.source.title
         except:
             await ctx.send("Nothing is currently playing!")
             return
         
-        seconds = vc.current.length
-        seconds = seconds / 1000
+        seconds = vc.source.length
         m, s = divmod(seconds, 60)
         m = int(m)
         s = int(s)
         secondspassed = vc.position
-        secondspassed = secondspassed / 1000
         mp, sp = divmod(secondspassed, 60)
         mp = int(mp)
         sp = int(sp)
@@ -232,9 +226,9 @@ class Music(commands.Cog):
             vc.queue.put_at_front(upcoming)
             upcomingt = upcoming.title
             upcomingu = upcoming.uri
-            fmt = f"\n__Now Playing__:\n[{vc.current.title}]({vc.current.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
         else:
-            fmt = f"\n__Now Playing__:\n[{vc.current.title}]({vc.current.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
         embed = nextcord.Embed(title=f'Currently Playing in {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
         await ctx.send(embed=embed)
