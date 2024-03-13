@@ -178,7 +178,7 @@ class hostTools(commands.Cog):
         print("Attempting Reminder List")
         # Loop through notification DB and send the list to the bots command channel
         for notificationID in self.database2['notifications'].copy():
-            user = ctx.guild.get_member(int(self.database2['notifications'][notificationID]['User'].translate({ord(i): None for i in '@<>'})))
+            user = ctx.guild.get_member(int(self.database2['notifications'][notificationID]['User'].translate({ord(i): None for i in '@!<>'})))
             time = "<t:" + str(self.database2['notifications'][notificationID]['Time']) + ":F>\n"
             notifListEmbedData = notifListEmbedData + f"{user} {time}"
             #await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
@@ -219,7 +219,7 @@ class hostTools(commands.Cog):
         await bChannel.edit(f"{ctx.author.mention} has added themself to Host Slot {slot_id}")
         
         
-    @commands.command(name = "removeHostSlot", help = "Remove signup for host timeslot")
+    @commands.command(name = "removeHostSlot", help = "Remove signup for host timeslot", aliases=['rHostSlot'])
     async def removeHostSlot(self, ctx, slot_id):
 
         # Check to see if the imbed already exists
@@ -251,7 +251,7 @@ class hostTools(commands.Cog):
         await bChannel.edit(f"{ctx.author.mention} has removed themself from Host Slot {slot_id}")
     ''''''
     @commands.command(name = "hostTestFunction1", help = "test")
-    async def test(self, ctx):
+    async def hostTestFunction1(self, ctx):
         data = await nextSeveralDaysOfTheWeek(5,12)
         commandData = ""
         hostJsonData = self.database3['hostRoster'].copy()
@@ -278,7 +278,7 @@ class hostTools(commands.Cog):
         await botCommandsChannel.send(embedData)
 
     @commands.command(name = "hostTestFunction2", help = "test")
-    async def test2(self, ctx):
+    async def hostTestFunction2(self, ctx):
         # Check to see if the embed already exists
         scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
         data = await nextSeveralDaysOfTheWeek(5,12)
@@ -450,7 +450,6 @@ async def nextSeveralDaysOfTheWeek(dayOfWeek, numberOfThoseDays):
     else:
         daydifference = (7 + dayOfWeek - todayNumber)
 
-    
     upcomingDay = correctedCurrentTimestamp + (daydifference*86400)
     currentLoopTimestamp = upcomingDay
     dateList = []
