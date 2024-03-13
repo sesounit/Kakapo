@@ -178,12 +178,13 @@ class hostTools(commands.Cog):
         print("Attempting Reminder List")
         # Loop through notification DB and send the list to the bots command channel
         for notificationID in self.database2['notifications'].copy():
-            user = ctx.guild.get_member(int(self.database2['notifications'][notificationID]['User'].translate({ord(i): None for i in '@!<>'})))
+            user = self.database2['notifications'][notificationID]['User']
             time = "<t:" + str(self.database2['notifications'][notificationID]['Time']) + ":F>\n"
-            notifListEmbedData = notifListEmbedData + f"{user} {time}"
-            #await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
+            notifListEmbedData = notifListEmbedData + f"{notificationID}: {user} {time}"
+        notifListEmbedTemp = nextcord.Embed(title=f"Active Notifications", description="Please Wait", color=0x0E8643)
         notifListEmbed = nextcord.Embed(title=f"Active Notifications", description=notifListEmbedData, color=0x0E8643)
-        await botCommandsChannel.send(embed=notifListEmbed)
+        tempMessage = await botCommandsChannel.send(embed=notifListEmbedTemp)
+        await tempMessage.edit(embed=notifListEmbed)
 
 
     @commands.command(name = "hostSlot", help = "Signup for host timeslot")

@@ -144,3 +144,4 @@ lavalink-node/lavalink.jar
 lavalink-node/logs
 cogs/ignore-minecraftStatus.py
 cogs/minecraftStatus.py
+autoNotifications.json
