@@ -333,7 +333,7 @@ class hostTools(commands.Cog):
     @tasks.loop(seconds=3600)
     async def updateHostSlots(self):
         scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
-        currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 60000
+        currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 68000
         hostJsonData = self.database3['hostRoster'].copy()
         # Check to see if the host json exists
         if hostJsonData == {}:
@@ -347,9 +347,6 @@ class hostTools(commands.Cog):
             if (scheduler_message == None):
                 hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
                 await hostSchedulingChannel.send(embed=hostEmbed)
-            else:
-                hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
-                await scheduler_message.edit(embed=hostEmbed)
         
         # If the earliest slot in the host roster is earlier than the current day + 1 than remove it, push all dates up, and 
         if int(self.database3['hostRoster'][str(1)]["Time"]) < currentUTCTimePlusOneDay:
