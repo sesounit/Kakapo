@@ -618,11 +618,15 @@ class autoSlot(commands.Cog):
     # Briefing Channel
     @commands.command(aliases=['ofb'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
-    async def oneoffbriefing(self, ctx, operation_id=None):
+    async def oneOffBriefing(self, ctx, operation_id):
+
+        botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
 
         # Delete User Message before Update
         try:
             await ctx.message.delete()
+            messageToSend = await botCommandsChannel.send("About to ping members.")
+            await messageToSend.edit(f"{ctx.author.mention} Created one-off briefing channel")
         except:
             print()
 
