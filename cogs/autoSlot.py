@@ -584,9 +584,12 @@ class autoSlot(commands.Cog):
         operativesR = []
         for op in self.database['operations'][operation_id]['assignments']:
             operatives.append(ctx.guild.get_member(self.database['operations'][operation_id]['assignments'].get(op)))
+        '''
         for msg in messages:
             if msg.author not in operativesR:
                 operativesR.append(msg.author)
+        '''
+        operativesR = await self.FormFeedBack.listOfOperatives(operation_id, ctx)
         ping = "Operatives yet to provide feedback: \n"
         #Variable for formatting purposes, boolean for if it's the first person in the list.
         i = False
@@ -769,6 +772,8 @@ class autoSlot(commands.Cog):
         # Remove operation channel in database
         del self.database['operations'][operation_id]
         self.saveData()
+
+        await self.FormFeedback.deleteOp(operation_id)
 
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} removed operation {deletedunit}.")

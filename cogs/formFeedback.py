@@ -1,4 +1,4 @@
-import nextcord, requests, time
+import nextcord, requests, time, os, json
 from nextcord.ext import commands
 
 #formFeedback Cog
@@ -7,14 +7,33 @@ class FormFeedBack(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    feedBackDataBase = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
         self.autoSlot = self.client.get_cog("autoSlot")
 
+        if os.path.exists('feedBack.json'):
+            with open('feedBack.json', 'r') as json_file:
+                self.database = json.load(json_file)
+
     #@nextcord.slash_command(name="form")
     #async def form(self, interaction, operationid=None):
         #await interaction.response.send_modal(FeedbackModal(operationId))
+    
+    def saveDataBase(self):
+        # Dumps data to autoSlot.json
+        with open('feedBack.json', 'w') as f:
+            json.dump(self.feedBackDataBase, f)
+    
+    async def listOfOperatives(self, operationId, ctx):
+        operativesR = []
+        for op in self.feedBackDataBase.get(operationId):
+            operativesR.append(ctx.guild.get_member(op))
+        return operativesR
+    
+    async def deleteOp(self, operationId):
+        FormFeedBack.feedBackDatabase.remove(operationId)
 
     async def serveForm(self, interaction, operationId):
         if operationId == None:
@@ -65,6 +84,18 @@ class FeedbackModal(nextcord.ui.Modal):
                 "design feedback" : self.emDesignFeedback.value, "leadership feedback" : self.emLeadershipFeedback.value}
 
         response = requests.request("POST", self.webHook, data=payload)
+
+        operativeList = FormFeedBack.feedBackDataBase.get(self.operationId)
+
+        # I hate doing nested if statements but doing this with boolean algebra isn't as easy as this.
+        if operativeList:
+            if not interaction.user.id in operativeList:
+                FormFeedBack.feedBackDataBase[self.operationId].append(interaction.user.id)
+        else:
+            FormFeedBack.feedBackDataBase.update({self.operationId : [interaction.user.id]})
+
+        
+        FormFeedBack.saveDataBase
 
         return await interaction.followup.send(embed=em)
 

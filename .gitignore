@@ -142,3 +142,4 @@ autoSlot.json
 hostRoster.json
 lavalink-node/lavalink.jar
 lavalink-node/logs
+cogs/ignore-TestRegEx.py
