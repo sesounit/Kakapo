@@ -34,6 +34,7 @@ class FormFeedBack(commands.Cog):
     
     async def deleteOp(self, operationId):
         FormFeedBack.feedBackDatabase.remove(operationId)
+        self.saveDataBase
 
     async def serveForm(self, interaction, operationId):
         if operationId == None:
