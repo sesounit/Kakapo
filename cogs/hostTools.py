@@ -332,7 +332,7 @@ class hostTools(commands.Cog):
                 
     @tasks.loop(seconds=3600)
     async def updateHostSlots(self):
-        currentESTTime = (datetime.utcnow().timestamp - 14400)
+        currentESTTime = (datetime.utcnow().timestamp() - 14400)
         scheduler_message = await hostSchedulingChannel.history().get(author__id = self.client.user.id)
         #currentUTCTimePlusOneDay = datetime.utcnow().timestamp() + 68000
         hostJsonData = self.database3['hostRoster'].copy()
