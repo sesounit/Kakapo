@@ -97,7 +97,7 @@ class miscCommands(commands.Cog):
         else:
             target = ctx.author
 
-        roleId = 911066595344924730
+        roleId = 464175395651190805
         if target.get_role(roleId):
             await target.remove_roles(ctx.guild.get_role(roleId))
             return await ctx.send(f"{target.mention} is now off LOA, welcome back!")
