@@ -183,7 +183,7 @@ class hostTools(commands.Cog):
             notifListEmbedData = notifListEmbedData + f"{user} {time}"
             #await botCommandsChannel.send(f"Notification {notificationID}: {user} {time} {self.database2['notifications'][notificationID]['Message']}")
         notifListEmbed = nextcord.Embed(title=f"Active Notifications", description=notifListEmbedData, color=0x0E8643)
-        await botCommandsChannel.send(embed=notifListEmbed)
+        await ctx.send(embed=notifListEmbed)
 
 
     @commands.command(name = "hostSlot", help = "Signup for host timeslot")
@@ -196,11 +196,11 @@ class hostTools(commands.Cog):
 
         # Check if slot exists
         if hostJsonData.get(slot_id) == None:
-            return await botCommandsChannel.send(f"Host Slot ID {slot_id} not found.")
+            return await ctx.send(f"Host Slot ID {slot_id} not found.")
         
         # Check if slot already has user
         if self.database3['hostRoster'][slot_id]["User"] != "":
-            return await botCommandsChannel.send("Please remove the person from this slot before trying to claim it.")
+            return await ctx.send("Please remove the person from this slot before trying to claim it.")
         
         #Assign Slot
         self.database3['hostRoster'][slot_id]["User"] = ctx.author.mention
@@ -215,7 +215,7 @@ class hostTools(commands.Cog):
             hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
             await scheduler_message.edit(embed=hostEmbed)
 
-        bChannel = await botCommandsChannel.send("About to be edited.")
+        bChannel = await hostNotificationsChannel.send("About to be edited.")
         await bChannel.edit(f"{ctx.author.mention} has added themself to Host Slot {slot_id}")
         
         
@@ -229,11 +229,11 @@ class hostTools(commands.Cog):
 
         # Check if slot exists
         if hostJsonData.get(slot_id) == None:
-            return await botCommandsChannel.send(f"Host Slot ID {slot_id} not found.")
+            return await ctx.send(f"Host Slot ID {slot_id} not found.")
         
         if self.database3['hostRoster'][slot_id]["User"] != ctx.author.id:
             if "Campaign Host" in ctx.author.roles or "Operations Command" in ctx.author.roles or "Command Consultant" in ctx.author.roles or "Operation Host" in ctx.author.roles:
-                return await botCommandsChannel.send('You are not a host. Only hosts can remove another operative from a slot.')
+                return await ctx.send('You are not a host. Only hosts can remove another operative from a slot.')
             self.database3['hostRoster'][slot_id]["User"] = ""
         else:
             self.database3['hostRoster'][slot_id]["User"] = ""
@@ -247,7 +247,7 @@ class hostTools(commands.Cog):
             hostEmbed = nextcord.Embed(title=f"Host Scheduler", description=embedData, color=0x0E8643)
             await scheduler_message.edit(embed=hostEmbed)
 
-        bChannel = await botCommandsChannel.send("About to be edited.")
+        bChannel = await hostNotificationsChannel.send("About to be edited.")
         await bChannel.edit(f"{ctx.author.mention} has removed themself from Host Slot {slot_id}")
     ''''''
     @commands.command(name = "hostTestFunction1", help = "test")
