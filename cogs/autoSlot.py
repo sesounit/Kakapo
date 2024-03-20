@@ -584,9 +584,12 @@ class autoSlot(commands.Cog):
         operativesR = []
         for op in self.database['operations'][operation_id]['assignments']:
             operatives.append(ctx.guild.get_member(self.database['operations'][operation_id]['assignments'].get(op)))
+        '''
         for msg in messages:
             if msg.author not in operativesR:
                 operativesR.append(msg.author)
+        '''
+        operativesR = await self.FormFeedBack.listOfOperatives(operation_id, ctx)
         ping = "Operatives yet to provide feedback: \n"
         #Variable for formatting purposes, boolean for if it's the first person in the list.
         i = False
@@ -615,11 +618,15 @@ class autoSlot(commands.Cog):
     # Briefing Channel
     @commands.command(aliases=['ofb'])
     @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
-    async def oneoffbriefing(self, ctx, operation_id=None):
+    async def oneOffBriefing(self, ctx, operation_id):
+
+        botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
 
         # Delete User Message before Update
         try:
             await ctx.message.delete()
+            messageToSend = await botCommandsChannel.send("About to ping members.")
+            await messageToSend.edit(f"{ctx.author.mention} Created one-off briefing channel")
         except:
             print()
 
@@ -769,6 +776,8 @@ class autoSlot(commands.Cog):
         # Remove operation channel in database
         del self.database['operations'][operation_id]
         self.saveData()
+
+        await self.FormFeedback.deleteOp(operation_id)
 
         # Notify user
         await botCommandsChannel.send(f"{ctx.author.mention} removed operation {deletedunit}.")
