@@ -20,7 +20,7 @@ class autoSlot(commands.Cog):
         self.hostTools = self.client.get_cog("hostTools")
 
     @commands.command(name = "addoperation", help = "Adds a new operation with given name. Use quotations for multi-word names", aliases=["addop","ao"])
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def addOperation(self, ctx, operation_name: str, operation_timestamp: int, modlist = None):
 
         # Set Bot Commands as output channel
@@ -60,7 +60,7 @@ class autoSlot(commands.Cog):
         await botCommandsChannel.send(f"{ctx.author.mention} has added a new operation. Your operation ID for {operation_name_converted} is: {operation_id}")
 
     @commands.command(name = "addslots")
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def addSlots(self, ctx, operation_id, *, slots):
 
         # Set Bot Commands as output channel
@@ -453,7 +453,7 @@ class autoSlot(commands.Cog):
 
     # Remove All
     @commands.command(aliases=['deleteslotall','delslotall','removeslotall','rmslotall','deleteallslots','delallslots','removeallslots','rmallslots'])
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def rslotAll(self, ctx):
 
         # Determine Op ID by channel name
@@ -501,7 +501,7 @@ class autoSlot(commands.Cog):
 
     # Feedback Channel
     @commands.command()
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def feedback(self, ctx, operation_id=None):
 
         # Delete User Message before Update
@@ -565,7 +565,7 @@ class autoSlot(commands.Cog):
         
 
     @commands.command(aliases=["remind"])
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def remindFeedback(self, ctx, operation_id=None, dm=""):
         # I'm sorry for this, I should've commented this when it was first made. Just know we can't move it around, this looks awful but makes it easier for the user.
         if isinstance(dm, int):
@@ -617,7 +617,7 @@ class autoSlot(commands.Cog):
 
     # Briefing Channel
     @commands.command(aliases=['ofb'])
-    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host")
+    @commands.has_any_role("Operations Command", "Command Consultant", "Campaign Host", "Operation Host", 1170162404529819648)
     async def oneOffBriefing(self, ctx, operation_id):
 
         botCommandsChannel = nextcord.utils.get(ctx.guild.channels, name=f"bot-commands")
