@@ -33,7 +33,7 @@ class FormFeedBack(commands.Cog):
         return operativesR
     
     async def deleteOp(self, operationId):
-        FormFeedBack.feedBackDatabase.remove(operationId)
+        FormFeedBack.feedBackDataBase.remove(operationId)
         self.saveDataBase
 
     async def serveForm(self, interaction, operationId):
@@ -109,6 +109,70 @@ class FeedbackModal(nextcord.ui.Modal):
             em.add_field(name="Leadership:", value=self.emLeadershipFeedback.value, inline=False)
         return await interaction.response.send_message(embed=em)
         '''
+
+class ComplianceModal(nextcord.ui.Modal):
+    def __init__(self, operationId=None, autoSlot=None):
+        super().__init__(
+            "Compliance Concern",
+        )
+
+        self.operationId = operationId
+        
+        self.autoSlot = autoSlot
+
+        self.webHook = "https://script.google.com/macros/s/AKfycbzTvQGupZo6HolKi9wiGRz5uk-gR4_A2fW1lPc9BH5RJRP6w6VN4TPeGYOVuyomLNlmYw/exec?gid=212667745"
+
+        # Currently select options are not supported in modals.
+        #self.emEnjRating = nextcord.ui.StringSelect(placeholder = "Your overall enjoyment rating", min_values=1, max_values=1)
+        #for i in range(1, 11):
+        #    self.emEnjRating.add_option(label=i, value=i)
+        self.emSituation =  nextcord.ui.TextInput(label = "Situation", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=True, placeholder="What happened that caused this compliance concern?")
+        self.emWitnesses = nextcord.ui.TextInput(label = "Witnesses", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=True, placeholder="Who can attest to witnessing this situation? (If witnesses are already mentioned, mention them here again)")
+        self.emAddNotes = nextcord.ui.TextInput(label = "Additional Notes", style=nextcord.TextInputStyle.paragraph, min_length=1, max_length=1024, required=True, placeholder="Any other notes you would like to mention?")
+        self.add_item(self.emSituation)
+        self.add_item(self.emWitnesses)
+        self.add_item(self.emAddNotes)
+
+    async def callback(self, interaction: nextcord.Interaction) -> None:
+        await interaction.response.defer()
+
+        em = nextcord.Embed(title=str(interaction.channel.name.removesuffix(" Feedback")), description=f"Feedback submitted for {interaction.channel.name.removesuffix(' Feedback')}!")
+        em.set_author(name=str(interaction.user).removesuffix('#0'), icon_url=interaction.user.avatar)
+
+        host = interaction.guild.get_member(self.autoSlot.database['operations'][self.operationId]['author']).name
+
+        payload = {"operation date" : self.autoSlot.database['operations'][self.operationId]['operation_timestamp'], "submission date" : time.time(), 
+                "operation name" : interaction.channel.name.removesuffix(" Feedback"),
+                "host" : host, "author" : interaction.user.name,
+                "enjoyment rating" : self.emEnjRating.value, "enjoyment feedback" : self.emEnjFeedback.value, "design rating" : self.emDesignRating.value, 
+                "design feedback" : self.emDesignFeedback.value, "leadership feedback" : self.emLeadershipFeedback.value}
+
+        response = requests.request("POST", self.webHook, data=payload)
+
+        operativeList = FormFeedBack.feedBackDataBase.get(self.operationId)
+
+        # I hate doing nested if statements but doing this with boolean algebra isn't as easy as this.
+        if operativeList:
+            if not interaction.user.id in operativeList:
+                FormFeedBack.feedBackDataBase[self.operationId].append(interaction.user.id)
+        else:
+            FormFeedBack.feedBackDataBase.update({self.operationId : [interaction.user.id]})
+
+        
+        FormFeedBack.saveDataBase
+
+        return await interaction.followup.send(embed=em)
+
+        '''
+        em = nextcord.Embed(title=f"{str(interaction.user).removesuffix('#0')}\'s feedback", description="Operation Name")
+        em.add_field(name=f"Overall Enjoyment: {self.emEnjRating.value}/10", value=self.emEnjFeedback.value)
+        if self.emDesignRating.value != "" or self.emDesignFeedback.value != "":
+            em.add_field(name=f"Operation Design: {self.emDesignRating.value}/10", value=self.emDesignFeedback.value, inline=False)
+        if self.emLeadershipFeedback.value != "":
+            em.add_field(name="Leadership:", value=self.emLeadershipFeedback.value, inline=False)
+        return await interaction.response.send_message(embed=em)
+        '''
+
 
     
     
