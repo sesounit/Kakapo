@@ -84,19 +84,28 @@ class Music(commands.Cog):
 
             if "playlist" in search:
                 search = await wavelink.Playable.search(search)
-                if len(search.tracks) > 100:
-                    return await ctx.send("Playlist too large, please limit yourself to playlists smaller than 100.")
+                #if len(search.tracks) > 100:
+                    #return await ctx.send("Playlist too large, please limit yourself to playlists smaller than 100.")
                 if vc.queue.is_empty and not vc.playing:
                     await vc.play(search.tracks[0])
                     await ctx.message.add_reaction('▶️')
                     await ctx.send(f'**Now playing:** `{search.tracks[0].title}`')
+                    i = 0
                     for track in search.tracks:
+                        if i == 101:
+                            await ctx.send("Playlist limit reached, only 100 songs have been added from the playlist.")
+                            break
                         if track == search.tracks[0]:
                             continue
                         await vc.queue.put_wait(track)
+                        i += 1
                     return
                 else:
+                    i = 0
                     for track in search.tracks:
+                        if i == 101:
+                            await ctx.send("Playlist limit reached, only 100 songs have been added from the playlist.")
+                            break
                         await vc.queue.put_wait(track)
                     await ctx.send("Populating queue with playlist.")
                     return
@@ -108,7 +117,7 @@ class Music(commands.Cog):
                 try:
                     track = tracks[0]
                 except:
-                    await ctx.send("Playlists are not supported.")
+                    await ctx.send("Unexpected error encountered.")
                     return
                 await vc.play(track)
                 await ctx.message.add_reaction('▶️')
@@ -124,7 +133,7 @@ class Music(commands.Cog):
                 try:
                     track = tracks[0]
                 except:
-                    await ctx.send("Playlists are not supported.")
+                    await ctx.send("Unexpected error encountered.")
                     return
                 await vc.queue.put_wait(track)
                 await ctx.message.add_reaction('▶️')
