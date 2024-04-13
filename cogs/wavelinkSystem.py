@@ -236,9 +236,7 @@ class Music(commands.Cog):
         else:
             songposition = ("{0}:{1}".format(mp, sp))
         if not vc.queue.is_empty:
-            upcoming = vc.queue.get()
-            #vc.queue.get tells the queue to remove what it just got from the queue, the next line puts it back in.
-            vc.queue.put_at_front(upcoming)
+            upcoming = vc.queue.peek()
             upcomingt = upcoming.title
             upcomingu = upcoming.uri
             fmt = f"\n__Now Playing__:\n[{vc.current.title}]({vc.current.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + f"[{upcomingt}]({upcomingu})" + f"\n**{vc.queue.count} song(s) in queue**"
