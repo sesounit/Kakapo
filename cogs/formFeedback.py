@@ -1,5 +1,6 @@
 import nextcord, requests, time, os, json
 from nextcord.ext import commands
+from nextcord.ui import Button, View
 
 #formFeedback Cog
 class FormFeedBack(commands.Cog):
@@ -20,6 +21,28 @@ class FormFeedBack(commands.Cog):
     #@nextcord.slash_command(name="form")
     #async def form(self, interaction, operationid=None):
         #await interaction.response.send_modal(FeedbackModal(operationId))
+
+    @nextcord.slash_command(name='fixform',description="Reset a channel's form submission.")
+    @commands.has_permissions(administrator=True)
+    async def setMessage(self, ctx, message_id: str):
+        message = await ctx.channel.fetch_message(int(message_id))
+
+        #Create the button to spawn the form.
+        view = View(timeout=None)
+        async def formButtonBackend(interaction):
+            await self.serveForm(interaction, self.autoSlot.findOperationByName(interaction.channel.name.removesuffix(" Feedback")))
+        formButton = Button(label="Feedback", style=nextcord.ButtonStyle.success)
+        formButton.callback = formButtonBackend
+
+        async def compButtonBackend(interaction):
+            await self.serveCompForm(interaction, self.autoSlot.findOperationByName(interaction.channel.name.removesuffix(" Feedback")))
+        compButton = Button(label="Concern", style=nextcord.ButtonStyle.danger)
+        compButton.callback = compButtonBackend
+        view.add_item(formButton)
+        view.add_item(compButton)
+
+        await message.edit(view = view)
+        return await ctx.response.send_message("Form fixed!", ephemeral=True)
     
     def saveDataBase(self):
         # Dumps data to autoSlot.json

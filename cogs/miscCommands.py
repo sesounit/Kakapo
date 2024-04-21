@@ -55,8 +55,8 @@ class miscCommands(commands.Cog):
     async def version(self, context):
 
         mainEmbed = nextcord.Embed(title="Kakapo Version Notes", description="SESO's Multi-Use Discord Bot", color=0x0E8643)
-        mainEmbed.add_field(name="Changes:", value=f"Launched compliance concern report form, operatives can now discretely submit concerns when they give feedback.")
-        mainEmbed.add_field(name="Version Code:", value="v1.7.0", inline=False)
+        mainEmbed.add_field(name="Changes:", value=f"Launched compliance concern report form, operatives can now discretely submit concerns when they give feedback. \n .1 Patch allows forms to be fixed after bot restart.")
+        mainEmbed.add_field(name="Version Code:", value="v1.7.1", inline=False)
         mainEmbed.add_field(name="Date Released:", value="April 20, 2024", inline=False)
         mainEmbed.set_footer(text="Kakapo written by pickle423, dildo_sagbag, masterchiefcw, f13tch")
 
