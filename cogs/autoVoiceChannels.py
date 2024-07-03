@@ -219,7 +219,7 @@ class autoVoiceChannels(commands.Cog):
             if self.VCGuilds[ctx.guild.id].created_voice_channels[channel] == authors_voice_channel.id:
                 break
         else:
-            await ctx.response.send_message("Permanent Discord channels cannot be locked.")
+            await ctx.response.send_message("Permanent Discord channels cannot be renamed.")
             return
         if len(new_name) > 19:
             await ctx.response.send_message('New name is too long! Please limit it to 19 characters or less.')

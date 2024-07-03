@@ -825,7 +825,7 @@ class autoSlot(commands.Cog):
                 else:
                     slots = slots + (f"{slot}: {self.database['operations'][operation_id]['groups'][group][slot]} - {ctx.guild.get_member(assignments.get(slot)).mention}\n")
             slot_embed.add_field(name=group, value=slots, inline=False)
-        slot_embed.add_field(name="Total Reservations:", value=len(assignments))
+        slot_embed.add_field(name="Total Reservations:", value=len(assignments) + 1)
         return slot_embed
 
     # Parse inputted slots into autoSlot format
