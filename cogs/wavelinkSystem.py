@@ -65,35 +65,35 @@ class Music(commands.Cog):
             elif p.playing or not p.queue.is_empty:
                 del autodisconnect[p]
 
-    @commands.command(aliases=['continue','resume','re','res', 'p'])
-    async def play(self, ctx: commands.Context, *, search: str = None):
+    @nextcord.slash_command(name='play',description="Play a song on the bot")
+    async def play(self, ctx, search: str = None):
+        await ctx.response.defer()
         if search:
             #partial = wavelink.PartialTrack(query=search, cls=wavelink.YouTubeTrack)
             """Play a song with the given search query.
 
             If not connected, connect to our voice channel.
             """
-            if not ctx.voice_client:
-                vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
-                await ctx.send(f'**Joined `{ctx.author.voice.channel}`**')
+            if not ctx.guild.voice_client:
+                vc: wavelink.Player = await ctx.user.voice.channel.connect(cls=wavelink.Player)
+                await ctx.channel.send(f'**Joined `{ctx.user.voice.channel}`**')
             else:
-                vc: wavelink.Player = ctx.voice_client
+                vc: wavelink.Player = ctx.guild.voice_client
 
             if "https://youtu.be/" in search:
                 search = musicHelper.convertShort(search)
 
-            if "playlist" in search:
+            if "/playlist?" in search:
                 search = await wavelink.Playable.search(search)
                 #if len(search.tracks) > 100:
-                    #return await ctx.send("Playlist too large, please limit yourself to playlists smaller than 100.")
+                    #return await ctx.followup.send("Playlist too large, please limit yourself to playlists smaller than 100.")
                 if vc.queue.is_empty and not vc.playing:
                     await vc.play(search.tracks[0])
-                    await ctx.message.add_reaction('▶️')
-                    await ctx.send(f'**Now playing:** `{search.tracks[0].title}`')
+                    await ctx.followup.send(f'**Now playing:** `{search.tracks[0].title}`')
                     i = 0
                     for track in search.tracks:
                         if i == 101:
-                            await ctx.send("Playlist limit reached, only 100 songs have been added from the playlist.")
+                            await ctx.followup.send("Playlist limit reached, only 100 songs have been added from the playlist.")
                             break
                         if track == search.tracks[0]:
                             continue
@@ -104,119 +104,114 @@ class Music(commands.Cog):
                     i = 0
                     for track in search.tracks:
                         if i == 101:
-                            await ctx.send("Playlist limit reached, only 100 songs have been added from the playlist.")
+                            await ctx.followup.send("Playlist limit reached, only 100 songs have been added from the playlist.")
                             break
                         await vc.queue.put_wait(track)
-                    await ctx.send("Populating queue with playlist.")
+                    await ctx.followup.send("Populating queue with playlist.", ephemeral=False)
                     return
             if vc.queue.is_empty and not vc.playing:
                 tracks = await wavelink.Playable.search(search)
                 if not tracks:
-                    await ctx.send(f'No tracks found with query: `{search}`')
+                    await ctx.followup.send(f'No tracks found with query: `{search}`')
                     return
                 try:
                     track = tracks[0]
                 except:
-                    await ctx.send("Unexpected error encountered.")
+                    await ctx.followup.send("Unexpected error encountered.")
                     return
                 await vc.play(track)
-                await ctx.message.add_reaction('▶️')
                 try:
-                    await ctx.send(f'**Now playing:** `{vc.current.title}`')
+                    await ctx.followup.send(f'**Now playing:** `{vc.current.title}`', ephemeral=False)
                 except:
-                    await ctx.send(f'**Now playing:** `Failed to find title`')
+                    await ctx.followup.send(f'**Now playing:** `Failed to find title`', ephemeral=False)
             else:
                 tracks = await wavelink.Playable.search(search)
                 if not tracks:
-                    await ctx.send(f'No tracks found with query: `{search}`')
+                    await ctx.followup.send(f'No tracks found with query: `{search}`')
                     return
                 try:
                     track = tracks[0]
                 except:
-                    await ctx.send("Unexpected error encountered.")
+                    await ctx.followup.send("Unexpected error encountered.")
                     return
                 await vc.queue.put_wait(track)
-                await ctx.message.add_reaction('▶️')
-                await ctx.send(f'**Added to Queue:** `{track.title}`')
+                await ctx.followup.send(f'**Added to Queue:** `{track.title}`', ephemeral=False)
 
         else:
-            vc: wavelink.Player = ctx.voice_client
+            vc: wavelink.Player = ctx.guild.voice_client
             await vc.pause(not vc.paused)
-            await ctx.message.add_reaction('▶️')
-            await ctx.send(f'**Resumed:** `{vc.current.title}`')
+            if vc.current == None or vc.current.title == None:
+                await ctx.followup.send("Trouble encountered resuming, no title found.")
+                return
+            await ctx.followup.send(f'**Resumed:** `{vc.current.title}`')
     
-    @commands.command()
-    async def skip(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='skip',description="Skip a song")
+    async def skip(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         #stop calls on_track_end, so nothing beyond stop is actually needed here.
-        await vc.stop()
-        if not vc.queue.is_empty:
-            await ctx.send(f'**Skipped!**')
-            await ctx.invoke(self.client.get_command('np'))
+        queuewasempty = vc.queue.is_empty
+        await vc.stop()  
+        if queuewasempty:
+            await ctx.response.send_message("Queue is empty.")
         else:
-            await ctx.send("Queue is empty.")
+            await ctx.channel.send(f'**Skipped!**')
+            await self.np(ctx)
+        
 
 
-    @commands.command(aliases=['ps', 'unpause'])
-    async def pause(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='pause',description="Pause the current song")
+    async def pause(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         await vc.pause(not vc.paused)
-        await ctx.message.add_reaction('⏸️')
+        await ctx.response.send_message("Audio paused!")
 
-    @commands.command()
-    async def stop(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='stop',description="Stop the bot playing entirely, this will clear the queue")
+    async def stop(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         if not vc.queue.is_empty:
             vc.queue.clear()
         await vc.stop()
-        await ctx.message.add_reaction('⏹️')
+        await ctx.response.send_message("Music stopped!")
 
-    @commands.command()
-    async def clear(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='clear',description="Clear the queued songs")
+    async def clear(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         vc.queue.clear()
-        await ctx.send("**Queue Cleared**")
+        await ctx.response.send_message("**Queue Cleared**", ephemeral=False)
 
-    @commands.command(aliases=['dis', 'fukoff', 'fukof', 'fuckoff', 'dc'])
-    async def disconnect(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='dc',description="Disconnect from the voice channel, this will clear the queue")
+    async def disconnect(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         if not vc.queue.is_empty:
             vc.queue.clear()
         await vc.disconnect()
-        await ctx.message.add_reaction('⏏️')
+        await ctx.response.send_message("Disconnected!")
 
-    @commands.command(aliases=['vol', 'v'])
-    async def volume(self, ctx: commands.Context, volume):
+    @nextcord.slash_command(name='volume',description="Set the volume of the bot")
+    async def volume(self, ctx, volume: int):
         volume = int(volume)
-        vc: wavelink.Player = ctx.voice_client
-        if volume == 0:
-            await ctx.message.add_reaction('🔇')
-        elif volume >= 0 and volume < 50:
-            await ctx.message.add_reaction('🔈')
-        elif volume >= 50 and volume < 70:
-            await ctx.message.add_reaction('🔉')
-        elif volume >= 70 and volume <= 100:
-            await ctx.message.add_reaction('🔊')
-        else:
+        vc: wavelink.Player = ctx.guild.voice_client
+        if volume > 100:
             #Do not let people set the volume beyond 100, for the love of god.
-            await ctx.message.add_reaction('❓')
+            await ctx.response.send_message("Volumes above 100 are not permitted.")
             return
         await vc.set_volume(volume)
+        await ctx.response.send_message(f"Volume set to {volume}")
 
     
-    @commands.command(aliases=["next", 'n', 'nowplaying'])
-    async def np(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='np',description="Shows what's currently playing")
+    async def np(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         if vc == None:
-            await ctx.send("Nothing is currently playing!")
+            await ctx.response.send_message("Nothing is currently playing!")
             return
         #is_playing doesn't seem to work here, no clue why.
         try:
             test = vc.current.title
         except:
-            await ctx.send("Nothing is currently playing!")
+            await ctx.response.send_message("Nothing is currently playing!")
             return
-        
+        await ctx.response.defer()
         seconds = vc.current.length
         seconds = seconds / 1000
         m, s = divmod(seconds, 60)
@@ -243,17 +238,19 @@ class Music(commands.Cog):
         else:
             fmt = f"\n__Now Playing__:\n[{vc.current.title}]({vc.current.uri})\n`{songposition}/{length}`\n__Up Next:__\n" + "Nothing" + f"\n**{vc.queue.count} song(s) in queue**"
         embed = nextcord.Embed(title=f'Currently Playing in {ctx.guild.name}', description=fmt, color=nextcord.Color.green())
-        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar.url)
-        await ctx.send(embed=embed)
+        embed.set_footer(text=f"{ctx.user.display_name}", icon_url=ctx.user.avatar.url)
+        await ctx.followup.send(embed=embed)
 
-    @commands.command(aliases=['upcoming', 'coming', 'q'])
-    async def queue(self, ctx: commands.Context):
-        vc: wavelink.Player = ctx.voice_client
+    @nextcord.slash_command(name='queue',description="Displays the current queue")
+    async def queue(self, ctx):
+        vc: wavelink.Player = ctx.guild.voice_client
         if vc == None:
-            await ctx.send("No channel is connected.")
-        if vc.queue.is_empty:
-            await ctx.send("Nothing is queued!")
+            await ctx.response.send_message("No channel is connected.")
             return
+        if vc.queue.is_empty:
+            await ctx.response.send_message("Nothing is queued!")
+            return
+        await ctx.response.defer()
         queuetitle = []
         queueurl = []
         for track in vc.queue:
@@ -271,7 +268,7 @@ class Music(commands.Cog):
             i = i + 1
         ListEmbed = nextcord.Embed(title=f"Queue for {ctx.guild.name}", description=queue, color=nextcord.Color.green())
         ListEmbed.set_footer(text="Music Functionality written by Pickle423#0408")
-        await ctx.message.channel.send(embed=ListEmbed)
+        await ctx.followup.send(embed=ListEmbed)
 
 
 
